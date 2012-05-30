@@ -4,6 +4,7 @@ import robocode.AdvancedRobot;
 import robocode.CustomEvent;
 
 
+@SuppressWarnings("serial")
 class TriggerSet extends HashMap<String, Trigger> {
 	
 	public void add(Trigger t) {
@@ -17,7 +18,6 @@ class TriggerSet extends HashMap<String, Trigger> {
 	}
 	
 	public void trigger(CustomEvent event) {
-		System.out.println("Event triggered: "+event.getCondition().getName());
 		this.trigger(event.getCondition().getName());
 	}
 	
