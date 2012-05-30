@@ -1,7 +1,10 @@
 import java.awt.geom.Point2D;
 
+import robocode.AdvancedRobot;
+import robocode.Robot;
 import robocode.ScannedRobotEvent;
 
+@SuppressWarnings("serial")
 class Opponent extends ScannedRobotEvent {
 
 	public Opponent(ScannedRobotEvent event) {
@@ -25,7 +28,7 @@ class Opponent extends ScannedRobotEvent {
 		return new Opponent(diff);
 	}
 
-	public Point2D.Double getRelativePosition(Rainbot other) {
+	public Point2D.Double getRelativePosition(AdvancedRobot other) {
 		double bearing = other.getHeadingRadians() + getBearingRadians();
 
 		double relativeX = Math.sin(bearing) * getDistance();
@@ -34,12 +37,12 @@ class Opponent extends ScannedRobotEvent {
 		return new Point2D.Double(relativeX, relativeY);
 	}
 
-	public Point2D.Double getAbsolutePosition(Rainbot other) {
+	public Point2D.Double getAbsolutePosition(AdvancedRobot other) {
 		Point2D relative = getRelativePosition(other);
 
 		return new Point2D.Double(
-				other.getThisBot().getX() + relative.getX(),
-				other.getThisBot().getY() + relative.getY()
+				other.getX() + relative.getX(),
+				other.getY() + relative.getY()
 		);
 	}
 
