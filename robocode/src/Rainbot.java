@@ -1,6 +1,7 @@
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 import robocode.AdvancedRobot;
 import robocode.BulletHitBulletEvent;
@@ -30,6 +31,10 @@ public class Rainbot extends AdvancedRobot {
 	
 	private Status status;
 	
+	private BulletQueue bullets;
+	
+	private Rectangle2D field;
+	
 	public Rainbot() {
 		super();
 		
@@ -40,12 +45,18 @@ public class Rainbot extends AdvancedRobot {
 		hue = 0;
 		
 		rainbowMode = false;
-	
-		
+			
 		status = new Status();
+	
 	}
 	
 	public void run() {
+		field = new Rectangle2D.Double(19, 19, getBattleFieldWidth()-38, getBattleFieldHeight()-38);
+		
+		setAdjustGunForRobotTurn(true);
+		setAdjustRadarForGunTurn(true);
+		setAdjustRadarForRobotTurn(true);
+		
 	    populateTriggers();
 	    
 	    triggers.addTo(this);
