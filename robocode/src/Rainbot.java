@@ -65,38 +65,54 @@ public class Rainbot extends AdvancedRobot {
 	    
 	    do {
 	    	hueShift();
+	        
+	    	detectOpponentFire();
 	    	
-	        setFire(0.3);
+//	    	setFire(0.3);
+	    	
+//			double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
+//			setTurnGunRightRadians(Utils.normalRelativeAngle(absoluteBearing - getGunHeadingRadians()));
 	       	        
 	        status.reset();
-	        
 	    	execute();
+
 	    } while (true);
+	}
+	
+	private void detectOpponentFire() {
+		if (status.opponentEnergyDrop &&
+				!status.hitToOpponent &&
+				!status.collidedWithOpponent) {
+		
+			Point2D oppPos = opponentHistory.getLast().getAbsolutePosition(this);
+			if (!field.contains(oppPos)) {
+				System.out.println("Looks like he crashed!");
+			}
+			else {
+				System.out.println("Opponent fire detected");
+			}
+		}
+		
+	}
+
+	private Point2D getPosition() {
+		return new Point2D.Double(getX(), getY());
+	}
+
+	public void fire(double power) {
+		setFire(power);
+		bullets.add(new Bullet(getX(), getY(), this.getGunHeadingRadians(), power, getTime()));
 	}
 
 	public void onScannedRobot(ScannedRobotEvent e) {
-//		System.out.println("Robot Scanned: "+e.getName());
 		opponentHistory.add(e);
-		
-	    double radarTurn =
-	            // Absolute bearing to target
-	            getHeadingRadians() + e.getBearingRadians()
-	            // Subtract current radar heading to get turn required
-	            - getRadarHeadingRadians();
-	     
-	    setTurnRadarRightRadians(Utils.normalRelativeAngle(radarTurn) * 1.9);   
-//	    
-//		
-//      double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
-//      setTurnGunRightRadians(Utils.normalRelativeAngle(absoluteBearing - getGunHeadingRadians()));
+
+		double radarTurn = getHeadingRadians() + e.getBearingRadians() - getRadarHeadingRadians();
+		setTurnRadarRightRadians(Utils.normalRelativeAngle(radarTurn) * 1.9);
 	}
 	
 	public void onPaint(Graphics2D g) {
 
-	}
-	
-	public AdvancedRobot getThisBot() {
-		return this;
 	}
 	
 	public void onCustomEvent(CustomEvent event) {
@@ -126,14 +142,15 @@ public class Rainbot extends AdvancedRobot {
 	
 	public void onBulletHit(BulletHitEvent event)  {
 		rainbow();
+		status.hitToOpponent = true;
 	}
 	
 	public void onBulletHitBullet(BulletHitBulletEvent event) {
-		status.bulletCount--;
+		//How to detect this...
 	}
 	
 	public void onBulletMissed(BulletMissedEvent event) {
-		status.bulletCount--;
+		bullets.removeFirst();
 	}
 	
 	public void onHitByBullet(HitByBulletEvent event) {
@@ -141,7 +158,7 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	public void onHitRobot(HitRobotEvent event) {
-		status.collidedWithOpponent = true;
+		status.nextCollidedWithOpponent = true;
 	}
 	
 	public void onHitWall(HitWallEvent event) {
@@ -153,23 +170,14 @@ public class Rainbot extends AdvancedRobot {
 		
 		triggers.add(new Trigger("Opponent Fired") {
 			@Override
-			public void action() {
-				System.out.println("Opponent Shot Detected...");
-				hueJump();
+			public void action() {			
+				status.opponentEnergyDrop = true;
 			}
 
 			@Override
 			public boolean test() {
 				if (opponentHistory.lastChange != null) {
-					Opponent change = opponentHistory.lastChange;			
-					//A drop in energy greater that 0.1 is probably a shot
-					//Elimiate other likely possibilities
-					if (status.collidedWithOpponent || status.hitOpponent) {
-						return false;
-					}
-					else {
-						return (change.getEnergy() <= -0.1);
-					}
+					return (opponentHistory.lastChange.getEnergy() <= -0.1);
 				}
 				else {
 					return false;
@@ -197,18 +205,22 @@ public class Rainbot extends AdvancedRobot {
 		int bulletCount = 0;
 		
 		boolean hitByOpponent;
-		boolean hitOpponent;
+		boolean hitToOpponent;
 		boolean collidedWithWall;
 		boolean collidedWithOpponent;
+		boolean nextCollidedWithOpponent;
+		boolean opponentEnergyDrop;
 		
 		public Status() {
 			reset();
 		}
 		public void reset() {
 			hitByOpponent = false;
-			hitOpponent = false;
+			hitToOpponent = false;
 			collidedWithWall = false;
-			collidedWithOpponent = false;
+			collidedWithOpponent = nextCollidedWithOpponent;
+			nextCollidedWithOpponent = false;
+			opponentEnergyDrop = false;
 		}
 	}
 	
