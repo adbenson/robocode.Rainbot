@@ -1,3 +1,4 @@
+package net.adbenson.robocode;
 import robocode.Condition;
 
 

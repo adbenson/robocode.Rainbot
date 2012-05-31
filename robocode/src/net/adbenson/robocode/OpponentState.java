@@ -1,3 +1,4 @@
+package net.adbenson.robocode;
 import java.awt.geom.Point2D;
 
 import robocode.AdvancedRobot;
