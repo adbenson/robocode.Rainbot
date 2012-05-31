@@ -3,12 +3,12 @@ import java.util.LinkedList;
 import robocode.ScannedRobotEvent;
 
 @SuppressWarnings("serial")
-class OpponentHistory extends LinkedList<Opponent> {
+public class OpponentHistory extends LinkedList<OpponentState> {
 	final static int MAX_CAPACITY = 1000;
-
-	Opponent lastChange = null;
 	
 	BulletQueue bullets;
+	
+	OpponentState last;
 	
 	public OpponentHistory() {
 		super();
@@ -17,18 +17,25 @@ class OpponentHistory extends LinkedList<Opponent> {
 	}
 
 	public boolean add(ScannedRobotEvent e) {
-		return this.add(new Opponent(e));
+		return this.add(new OpponentState(e, this.getLast()));
 	}
 
-	public boolean add(Opponent o) {
+	public boolean add(OpponentState o) {
 		while (this.size() > MAX_CAPACITY) {
 			this.removeFirst();
 		}
-
-		if (!this.isEmpty()) {
-			lastChange = o.diff(this.getLast());
-		}
-
+		
+		this.last = o;
+		
 		return super.add(o);
+	}
+	
+	public Opponent getLastChange() {
+		if (this.last != null) {
+			return this.last.change;
+		}
+		else {
+			return null;
+		}
 	}
 }
