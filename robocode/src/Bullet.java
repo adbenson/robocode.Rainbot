@@ -1,3 +1,5 @@
+import java.awt.Graphics2D;
+import java.awt.Shape;
 import java.awt.geom.Point2D;
 
 
@@ -19,15 +21,24 @@ public abstract class Bullet {
 	
 	public void updateDistance(long currentTime) {
 		long timeElapsed = currentTime - time;
-		distanceTravelled = velocity * timeElapsed;
+		//A lot of trial and error to get this fudge factor right!
+		distanceTravelled = velocity * (timeElapsed + 2.1);
+		
+		updateProjection();
 	}
-	
-    private double velocity() {
+
+	private double velocity() {
         return (20.0 - (3.0 * power));
     }
     
     public double getDistanceTravelled() {
     	return distanceTravelled;
     }
+
+	public abstract void draw(Graphics2D g);
+	
+	public abstract boolean shouldDelete();
+	
+    public abstract void updateProjection();
 	
 }
