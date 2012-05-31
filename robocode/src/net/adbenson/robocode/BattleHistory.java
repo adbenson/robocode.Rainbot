@@ -22,7 +22,7 @@ public class BattleHistory extends LinkedList<BattleState> {
 		current = null;
 	}
 	
-	public boolean addBots(ScannedRobotEvent opp, AdvancedRobot self) {
+	public boolean addBots(AdvancedRobot self, ScannedRobotEvent opp) {
 		BattleState next;
 		
 		if (current != null) {
