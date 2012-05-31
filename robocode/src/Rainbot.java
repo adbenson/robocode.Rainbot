@@ -156,7 +156,8 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	public void onPaint(Graphics2D g) {
-
+		g.setColor(Color.red);
+		g.draw(field);
 	}
 	
 	public void onCustomEvent(CustomEvent event) {
