@@ -36,7 +36,7 @@ public class Rainbot extends AdvancedRobot {
 	
 	private BulletQueue bullets;
 	
-	private Rectangle2D field;
+	private static Rectangle2D field;
 	
 	public Rainbot() {
 		super();
@@ -50,6 +50,8 @@ public class Rainbot extends AdvancedRobot {
 		rainbowMode = false;
 			
 		status = new Status();
+		
+		bullets = new BulletQueue();
 	
 	}
 	
@@ -70,6 +72,9 @@ public class Rainbot extends AdvancedRobot {
 	    	hueShift();
 	        
 	    	detectOpponentFire();
+	    	
+	    	bullets.updateAll(getTime());
+	    	opponentHistory.bullets.updateAll(getTime());
 	    	
 	    	//Square off!
 	    	faceOpponent();
@@ -124,7 +129,7 @@ public class Rainbot extends AdvancedRobot {
 				System.out.println("Opponent fire detected");
 				//Power level of the bullet will be the inverse of the energy drop
 				double power = -(opponentHistory.last.change.getEnergy());
-				opponentHistory.bullets.add(new OpponentBullet(oppPos, power, getTime()));
+				opponentHistory.bullets.add(new OpponentBullet(oppPos, opp.getBearingRadians(), power, getTime()));
 			}
 		}
 		
@@ -159,6 +164,8 @@ public class Rainbot extends AdvancedRobot {
 	public void onPaint(Graphics2D g) {
 		g.setColor(Color.red);
 		g.draw(field);
+		
+		opponentHistory.bullets.draw(g);
 	}
 	
 	public void onCustomEvent(CustomEvent event) {
@@ -204,16 +211,18 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	public void onHitRobot(HitRobotEvent event) {
-		status.nextCollidedWithOpponent = true;
+		status.collidedWithOpponent = true;
 	}
 	
 	public void onHitWall(HitWallEvent event) {
 		status.collidedWithWall = true;
 	}
+	
+	public static Rectangle2D getField() {
+		return field;
+	}
 		
 	private void populateTriggers() {
-
-		
 		
 		triggers.add(new Trigger("b") {
 			@Override
@@ -237,7 +246,6 @@ public class Rainbot extends AdvancedRobot {
 		boolean hitToOpponent;
 		boolean collidedWithWall;
 		boolean collidedWithOpponent;
-		boolean nextCollidedWithOpponent;
 		boolean opponentEnergyDrop;
 		
 		public Status() {
@@ -247,8 +255,7 @@ public class Rainbot extends AdvancedRobot {
 			hitByOpponent = false;
 			hitToOpponent = false;
 			collidedWithWall = false;
-			collidedWithOpponent = nextCollidedWithOpponent;
-			nextCollidedWithOpponent = false;
+			collidedWithOpponent = false;
 			opponentEnergyDrop = false;
 		}
 	}
