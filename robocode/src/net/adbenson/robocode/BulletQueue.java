@@ -4,7 +4,7 @@ import java.util.LinkedList;
 
 
 @SuppressWarnings("serial")
-public class BulletQueue extends LinkedList<Bullet>{
+public class BulletQueue<T extends Bullet> extends LinkedList<T>{
 
 	public void draw(Graphics2D g) {
 		for(Bullet b : this) {
@@ -13,9 +13,9 @@ public class BulletQueue extends LinkedList<Bullet>{
 	}
 
 	public void updateAll(long time) {
-		LinkedList<Bullet> delete = new LinkedList<Bullet>();
+		LinkedList<T> delete = new LinkedList<T>();
 		
-		for(Bullet b : this) {
+		for(T b : this) {
 			b.updateDistance(time);
 			if (b.shouldDelete()) {
 				delete.add(b);
