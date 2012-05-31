@@ -19,16 +19,15 @@ public class OpponentHistory extends LinkedList<OpponentState> {
 	}
 
 	public boolean add(ScannedRobotEvent e) {
-		return this.add(new OpponentState(e, last));
-	}
-
-	public boolean add(OpponentState o) {
+		
 		while (this.size() > MAX_CAPACITY) {
 			this.removeFirst();
 		}
 		
-		this.last = o;
+		OpponentState current = new OpponentState(e, last);
 		
-		return super.add(o);
+		this.last = current;
+		
+		return super.add(current);
 	}
 }
