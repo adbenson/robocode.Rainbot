@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
+import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletHitEvent;
@@ -136,8 +137,8 @@ public class Rainbot extends AdvancedRobot {
 		
 	}
 
-	private Point2D getPosition() {
-		return new Point2D.Double(getX(), getY());
+	private Vector getPosition() {
+		return new Vector(getX(), getY());
 	}
 	
 	public void setFire(double power) {

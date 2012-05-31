@@ -1,6 +1,5 @@
 package net.adbenson.robocode;
-import java.awt.geom.Point2D;
-
+import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
@@ -22,22 +21,19 @@ public class OpponentState extends Opponent {
 		}
 	}
 	
-	public Point2D.Double getRelativePosition(AdvancedRobot other) {
+	public Vector getRelativePosition(AdvancedRobot other) {
 		double bearing = other.getHeadingRadians() + getBearingRadians();
 
 		double relativeX = Math.sin(bearing) * getDistance();
 		double relativeY = Math.cos(bearing) * getDistance();
 
-		return new Point2D.Double(relativeX, relativeY);
+		return new Vector(relativeX, relativeY);
 	}
 
-	public Point2D.Double getAbsolutePosition(AdvancedRobot other) {
-		Point2D relative = getRelativePosition(other);
+	public Vector getAbsolutePosition(AdvancedRobot other) {
+		Vector relative = getRelativePosition(other);
 
-		return new Point2D.Double(
-				other.getX() + relative.getX(),
-				other.getY() + relative.getY()
-		);
+		return relative.add(new Vector(other.getX(), other.getY()));
 	}
 	
 	/**
