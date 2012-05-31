@@ -71,9 +71,7 @@ public class Rainbot extends AdvancedRobot {
 	    	detectOpponentFire();
 	    	
 	    	//Square off
-	    	if (!opponentHistory.isEmpty()) {
-	    		setTurnRight(opponentHistory.getLast().getBearingRadians() + HALF_PI);
-	    	}
+	    	faceOpponent();
 	    	
 //	    	setFire(0.3);
 	    	
@@ -85,6 +83,28 @@ public class Rainbot extends AdvancedRobot {
 	    	execute();
 
 	    } while (true);
+	}
+	
+	private void faceOpponent() {
+    	if (!opponentHistory.isEmpty()) {
+    		Opponent o = opponentHistory.getLast();
+    		double offFace = o.getBearingRadians();
+    		//We don't care which direction we face, so treat either direction the same.
+    		if (offFace < 0) {
+    			offFace += Math.PI;
+    		}
+    		
+    		//Offset so that "facing" is 0
+    		offFace -= HALF_PI;
+    		
+    		//Multiply the offset - we don't have all day! Move it!
+    		//(If it's too high, it introduces jitter.
+    		setTurnRight(offFace * 100); 		
+    	}
+    	else {
+    		//Nothin' better to do...
+    		setTurnRight(Double.POSITIVE_INFINITY);//opponentHistory.getLast().getBearingRadians() + HALF_PI);
+    	}
 	}
 	
 	private void detectOpponentFire() {
