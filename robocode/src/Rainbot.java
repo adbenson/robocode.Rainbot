@@ -114,9 +114,9 @@ public class Rainbot extends AdvancedRobot {
 				!status.collidedWithOpponent) {
 		
 			//Find the opponent's position on the field
-			Opponent opp = opponentHistory.getLast();
+			OpponentState opp = opponentHistory.last;
 			Point2D oppPos = opp.getAbsolutePosition(this);
-			
+System.out.println(opponentHistory.last.change);	
 			//Eliminate the possibility of wall crash
 			if (!field.contains(oppPos)) {
 				System.out.println("Looks like he crashed!");
@@ -124,7 +124,7 @@ public class Rainbot extends AdvancedRobot {
 			else {
 				System.out.println("Opponent fire detected");
 				//Power level of the bullet will be the inverse of the energy drop
-				double power = -(opponentHistory.lastChange.getEnergy());
+				double power = -(opponentHistory.last.change.getEnergy());
 				opponentHistory.bullets.add(new OpponentBullet(oppPos, power, getTime()));
 			}
 		}
@@ -221,8 +221,8 @@ public class Rainbot extends AdvancedRobot {
 
 			@Override
 			public boolean test() {
-				if (opponentHistory.lastChange != null) {
-					return (opponentHistory.lastChange.getEnergy() <= -0.1);
+				if (opponentHistory.last != null) {
+					return (opponentHistory.last.change.getEnergy() <= -0.1);
 				}
 				else {
 					return false;
