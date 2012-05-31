@@ -21,6 +21,7 @@ import robocode.util.Utils;
 public class Rainbot extends AdvancedRobot {
 	
 	public static final double HALF_PI = Math.PI / 2d;
+	public static final double MAX_TURN = Math.PI / 5d;
 	
 	private OpponentHistory opponentHistory;
 	
@@ -37,8 +38,10 @@ public class Rainbot extends AdvancedRobot {
 	private Status status;
 	
 	private BulletQueue bullets;
+	private int favoredTurnDirection;
 	
 	private static Rectangle2D field;
+	private double preferredDistance;
 	
 	public Rainbot() {
 		super();
@@ -59,6 +62,7 @@ public class Rainbot extends AdvancedRobot {
 	
 	public void run() {
 		field = new Rectangle2D.Double(19, 19, getBattleFieldWidth()-38, getBattleFieldHeight()-38);
+		preferredDistance = new Vector(field).magnitude() / 2;
 		
 		setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(true);
@@ -100,10 +104,14 @@ public class Rainbot extends AdvancedRobot {
     		if (offFace < 0) {
     			offFace += Math.PI;
     		}
-    		
+    		   		
     		//Offset so that "facing" is 0
     		offFace -= HALF_PI;
     		
+    		//Turn farther away the closer we are - by 1/2 field away, straighten out
+    		double distanceRatio = Math.max(0, (preferredDistance - o.getDistance()) / (preferredDistance));   		
+    		offFace += MAX_TURN * distanceRatio;
+    		    		
     		//Multiply the offset - we don't have all day! Move it! (If it's too high, it introduces jitter.)
     		setTurnRight(offFace * 100); 		
     	}
@@ -121,7 +129,7 @@ public class Rainbot extends AdvancedRobot {
 		
 			//Find the opponent's position on the field
 			OpponentState opp = opponentHistory.last;
-			Point2D oppPos = opp.getAbsolutePosition(this);
+			Vector oppPos = opp.getPosition(this);
 
 			//Eliminate the possibility of wall crash
 			if (!field.contains(oppPos) && opp.stopped()) {
