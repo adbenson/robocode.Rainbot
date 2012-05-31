@@ -16,6 +16,9 @@ public class OpponentState extends Opponent {
 		if (previousState != null) {
 			this.change = new OpponentChange(this, previousState);
 		}
+		else {
+			this.change = new OpponentChange();
+		}
 	}
 	
 	public Point2D.Double getRelativePosition(AdvancedRobot other) {

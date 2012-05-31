@@ -14,10 +14,12 @@ public class OpponentHistory extends LinkedList<OpponentState> {
 		super();
 		
 		bullets = new BulletQueue();
+		
+		last = null;
 	}
 
 	public boolean add(ScannedRobotEvent e) {
-		return this.add(new OpponentState(e, this.getLast()));
+		return this.add(new OpponentState(e, last));
 	}
 
 	public boolean add(OpponentState o) {
@@ -28,14 +30,5 @@ public class OpponentHistory extends LinkedList<OpponentState> {
 		this.last = o;
 		
 		return super.add(o);
-	}
-	
-	public Opponent getLastChange() {
-		if (this.last != null) {
-			return this.last.change;
-		}
-		else {
-			return null;
-		}
 	}
 }

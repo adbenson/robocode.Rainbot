@@ -13,5 +13,9 @@ public class OpponentChange extends Opponent {
 				currentState.getVelocity() - previousState.getVelocity()
 		);
 	}
+	
+	public OpponentChange() {
+		super("INITIAL STATE, NO CHANGE", 0,0,0,0,0);
+	}
 
 }

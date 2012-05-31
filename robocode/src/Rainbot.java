@@ -141,9 +141,9 @@ public class Rainbot extends AdvancedRobot {
 	
 	public void onScannedRobot(ScannedRobotEvent e) {
 		opponentHistory.add(e);
-		if(opponentHistory.last.change != null) {
-			status.opponentEnergyDrop = opponentHistory.last.change.getEnergy() <= -Rules.MIN_BULLET_POWER;
-		}
+		
+		status.opponentEnergyDrop = opponentHistory.last.change.getEnergy() <= -Rules.MIN_BULLET_POWER;
+		
 		maintainRadarLock(e);
 	}
 	
