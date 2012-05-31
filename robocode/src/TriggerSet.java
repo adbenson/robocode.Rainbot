@@ -5,7 +5,7 @@ import robocode.CustomEvent;
 
 
 @SuppressWarnings("serial")
-class TriggerSet extends HashMap<String, Trigger> {
+public class TriggerSet extends HashMap<String, Trigger> {
 	
 	public void add(Trigger t) {
 		this.put(t.getName(), t);
