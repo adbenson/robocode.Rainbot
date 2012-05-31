@@ -1,19 +1,29 @@
+import java.awt.geom.Point2D;
 
-public class Bullet {
+
+public abstract class Bullet {
 	
-	double x;
-	double y;
-	double direction;
-	double power;
-	long time;
+	final Point2D origin;
+	final double power;
+	final long time;
+	final double velocity;
 	
-	public Bullet(double x, double y, double direction, double power, long l) {
-		this.x = x;
-		this.y = y;
-		this.direction = direction;
+	private double distanceTravelled;
+	
+	public Bullet(Point2D origin, double power, long time) {
+		this.origin = origin;
 		this.power = power;
 		this.time = time;
+		this.velocity = velocity();
 	}
-
+	
+	public void updateDistance(long currentTime) {
+		long timeElapsed = currentTime - time;
+		distanceTravelled = velocity * timeElapsed;
+	}
+	
+    private double velocity() {
+        return (20.0 - (3.0 * power));
+    }
 	
 }
