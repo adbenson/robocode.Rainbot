@@ -1,6 +1,7 @@
 package net.adbenson.utility;
 
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 @SuppressWarnings("serial")
 public class Vector extends Point2D.Double {
@@ -41,6 +42,10 @@ public class Vector extends Point2D.Double {
 		this.y = y;
 	}
 	
+	public Vector(Rectangle2D rect) {
+		this(rect.getWidth(), rect.getHeight());
+	}
+
 	public Vector scale(double delta) {
 		return new Vector(x*delta, y*delta);
 	}
@@ -70,6 +75,14 @@ public class Vector extends Point2D.Double {
 		Vector thatNorm = that.normalize();
 		Vector difference = thisNorm.subtract(thatNorm);
 		return difference.magnitude();
+	}
+	
+	public static Vector getVectorFromAngle(double angle, double length) {
+		
+		double x = Math.sin(angle) * length;
+		double y = Math.cos(angle) * length;
+
+		return new Vector(x, y);
 	}
 
 }
