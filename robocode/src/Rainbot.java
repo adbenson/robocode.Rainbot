@@ -17,6 +17,8 @@ import robocode.util.Utils;
 
 public class Rainbot extends AdvancedRobot {
 	
+	public static final double HALF_PI = Math.PI / 2d;
+	
 	private OpponentHistory opponentHistory;
 	
 	private TriggerSet triggers;
@@ -61,18 +63,24 @@ public class Rainbot extends AdvancedRobot {
 	    
 	    triggers.addTo(this);
 	    
-	    setTurnRadarRightRadians(Double.POSITIVE_INFINITY);
+	    startRadarLock();
 	    
 	    do {
 	    	hueShift();
 	        
 	    	detectOpponentFire();
 	    	
+	    	//Square off
+	    	if (!opponentHistory.isEmpty()) {
+	    		setTurnRight(opponentHistory.getLast().getBearingRadians() + HALF_PI);
+	    	}
+	    	
 //	    	setFire(0.3);
 	    	
 //			double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
 //			setTurnGunRightRadians(Utils.normalRelativeAngle(absoluteBearing - getGunHeadingRadians()));
-	       	        
+	       	
+	    	//Reset all statuses so they will be "clean" for the next round of events
 	        status.reset();
 	    	execute();
 
@@ -80,16 +88,24 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	private void detectOpponentFire() {
+		//Check for energy drop, but rule out other causes
 		if (status.opponentEnergyDrop &&
 				!status.hitToOpponent &&
 				!status.collidedWithOpponent) {
 		
-			Point2D oppPos = opponentHistory.getLast().getAbsolutePosition(this);
+			//Find the opponent's position on the field
+			Opponent opp = opponentHistory.getLast();
+			Point2D oppPos = opp.getAbsolutePosition(this);
+			
+			//Eliminate the possibility of wall crash
 			if (!field.contains(oppPos)) {
 				System.out.println("Looks like he crashed!");
 			}
 			else {
 				System.out.println("Opponent fire detected");
+				//Power level of the bullet will be the inverse of the energy drop
+				double power = -(opponentHistory.lastChange.getEnergy());
+				opponentHistory.bullets.add(new OpponentBullet(oppPos, power, getTime()));
 			}
 		}
 		
@@ -98,15 +114,23 @@ public class Rainbot extends AdvancedRobot {
 	private Point2D getPosition() {
 		return new Point2D.Double(getX(), getY());
 	}
-
-	public void fire(double power) {
-		setFire(power);
-		bullets.add(new Bullet(getX(), getY(), this.getGunHeadingRadians(), power, getTime()));
+	
+	public void setFire(double power) {
+		bullets.add(new SelfBullet(getPosition(), this.getGunHeadingRadians(), power, getTime()));
+		super.setFire(power);
 	}
-
+	
 	public void onScannedRobot(ScannedRobotEvent e) {
 		opponentHistory.add(e);
 
+		maintainRadarLock(e);
+	}
+	
+	private void startRadarLock() {
+	    setTurnRadarRightRadians(Double.POSITIVE_INFINITY);
+	}
+	
+	private void maintainRadarLock(ScannedRobotEvent e) {
 		double radarTurn = getHeadingRadians() + e.getBearingRadians() - getRadarHeadingRadians();
 		setTurnRadarRightRadians(Utils.normalRelativeAngle(radarTurn) * 1.9);
 	}
