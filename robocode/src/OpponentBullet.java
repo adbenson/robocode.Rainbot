@@ -12,6 +12,7 @@ public class OpponentBullet extends Bullet {
 
 	public OpponentBullet(Point2D origin, double bearing, double power, long time) {
 		super(origin, power, time);
+		this.bearing = bearing;
 	}
 	
 	public Ellipse2D getBulletRadius() {
@@ -24,6 +25,12 @@ public class OpponentBullet extends Bullet {
 		g.setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), 50));
 		g.setStroke(new BasicStroke(3));
 		g.draw(radius);
+
+		double endX = Math.sin(bearing) * getDistanceTravelled();
+		double endY = Math.cos(bearing) * getDistanceTravelled();
+//System.out.println(bearing);		
+		g.drawLine((int)origin.getX(), (int)origin.getY(), (int)(origin.getX()+endX), (int)(origin.getY()+endY));
+		
 	}
 
 	@Override
