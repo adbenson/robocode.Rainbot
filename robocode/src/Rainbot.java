@@ -11,6 +11,7 @@ import robocode.CustomEvent;
 import robocode.HitByBulletEvent;
 import robocode.HitRobotEvent;
 import robocode.HitWallEvent;
+import robocode.Rules;
 import robocode.ScannedRobotEvent;
 import robocode.util.Utils;
 
@@ -70,11 +71,10 @@ public class Rainbot extends AdvancedRobot {
 	        
 	    	detectOpponentFire();
 	    	
-	    	//Square off
+	    	//Square off!
 	    	faceOpponent();
 	    	
 //	    	setFire(0.3);
-	    	
 //			double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
 //			setTurnGunRightRadians(Utils.normalRelativeAngle(absoluteBearing - getGunHeadingRadians()));
 	       	
@@ -97,13 +97,12 @@ public class Rainbot extends AdvancedRobot {
     		//Offset so that "facing" is 0
     		offFace -= HALF_PI;
     		
-    		//Multiply the offset - we don't have all day! Move it!
-    		//(If it's too high, it introduces jitter.
+    		//Multiply the offset - we don't have all day! Move it! (If it's too high, it introduces jitter.)
     		setTurnRight(offFace * 100); 		
     	}
     	else {
-    		//Nothin' better to do...
-    		setTurnRight(Double.POSITIVE_INFINITY);//opponentHistory.getLast().getBearingRadians() + HALF_PI);
+    		//Nuthin' better to do...
+    		setTurnRight(Double.POSITIVE_INFINITY);
     	}
 	}
 	
@@ -142,7 +141,9 @@ System.out.println(opponentHistory.last.change);
 	
 	public void onScannedRobot(ScannedRobotEvent e) {
 		opponentHistory.add(e);
-
+		if(opponentHistory.last.change != null) {
+			status.opponentEnergyDrop = opponentHistory.last.change.getEnergy() <= -Rules.MIN_BULLET_POWER;
+		}
 		maintainRadarLock(e);
 	}
 	
@@ -211,24 +212,7 @@ System.out.println(opponentHistory.last.change);
 	}
 		
 	private void populateTriggers() {
-		System.out.println("Creating triggers");
-		
-		triggers.add(new Trigger("Opponent Fired") {
-			@Override
-			public void action() {			
-				status.opponentEnergyDrop = true;
-			}
 
-			@Override
-			public boolean test() {
-				if (opponentHistory.last != null) {
-					return (opponentHistory.last.change.getEnergy() <= -0.1);
-				}
-				else {
-					return false;
-				}
-			}
-		});
 		
 		
 		triggers.add(new Trigger("b") {

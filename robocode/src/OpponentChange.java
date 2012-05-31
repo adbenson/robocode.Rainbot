@@ -1,4 +1,3 @@
-import robocode.ScannedRobotEvent;
 
 
 @SuppressWarnings("serial")
