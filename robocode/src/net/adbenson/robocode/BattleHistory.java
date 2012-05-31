@@ -4,14 +4,16 @@ import java.util.LinkedList;
 import robocode.ScannedRobotEvent;
 
 @SuppressWarnings("serial")
-public class OpponentHistory extends LinkedList<OpponentState> {
+public class BattleHistory extends LinkedList<BattleState> {
 	final static int MAX_CAPACITY = 1000;
 	
 	BulletQueue bullets;
 	
-	OpponentState last;
+	BattleState last;
 	
-	public OpponentHistory() {
+	OpponentState currentOpponent;
+	
+	public BattleHistory() {
 		super();
 		
 		bullets = new BulletQueue();
@@ -25,7 +27,7 @@ public class OpponentHistory extends LinkedList<OpponentState> {
 			this.removeFirst();
 		}
 		
-		OpponentState current = new OpponentState(e, last);
+		BattleState current = new BattleState(e, last.current);
 		
 		this.last = current;
 		

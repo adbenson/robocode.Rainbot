@@ -2,7 +2,7 @@ package net.adbenson.robocode;
 
 
 @SuppressWarnings("serial")
-public class OpponentChange extends Opponent {
+public class OpponentChange extends OpponentState {
 
 	public OpponentChange(OpponentState previous, OpponentState current) {
 		super(
