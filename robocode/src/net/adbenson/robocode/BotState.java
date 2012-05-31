@@ -41,13 +41,13 @@ public abstract class BotState<T extends BotState<T>> {
 		);
 	}
 	
-	public BotState(AdvancedRobot bot) {
+	public BotState(AdvancedRobot bot, T previous) {
 		this(
 				bot.getName(),
 				bot.getEnergy(),
 				bot.getHeading(),
 				bot.getVelocity(),
-				null
+				previous
 		);
 	}
 	
