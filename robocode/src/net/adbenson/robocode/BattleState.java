@@ -1,10 +1,7 @@
 package net.adbenson.robocode;
-import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
-
-@SuppressWarnings("serial")
 public class BattleState {
 	
 	final SelfState self;
@@ -16,13 +13,13 @@ public class BattleState {
 	}
 
 	public BattleState(AdvancedRobot self, ScannedRobotEvent opp) {
-		this(new SelfState(self), new OpponentState(opp));
+		this(new SelfState(self), new OpponentState(opp, self));
 	}
 	
 	public BattleState nextBattleState(AdvancedRobot self, ScannedRobotEvent opp) {
 		return new BattleState(
 				new SelfState(self, this.self),
-				new OpponentState(opp, this.opponent)
+				new OpponentState(opp, this.opponent, self)
 		);
 	}
 	

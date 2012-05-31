@@ -1,5 +1,6 @@
 package net.adbenson.robocode;
 import net.adbenson.utility.Vector;
+import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
 public class OpponentState extends BotState<OpponentState> {
@@ -7,17 +8,17 @@ public class OpponentState extends BotState<OpponentState> {
 	final double bearing;
 	final double distance;
 
-	public OpponentState(ScannedRobotEvent event, SelfState self) {
+	public OpponentState(ScannedRobotEvent event, AdvancedRobot self) {
 		this(event, null, self);
 	}
 
-	public OpponentState(ScannedRobotEvent current, OpponentState previous, SelfState self) {
+	public OpponentState(ScannedRobotEvent current, OpponentState previous, AdvancedRobot self) {
 		this(current.getName(), current.getEnergy(), current.getHeading(), current.getVelocity(), 
 				current.getBearingRadians(), current.getDistance(), previous, self);
 	}	
 
 	public OpponentState(String name, double energy, double heading, double velocity, 
-			double bearing, double distance, OpponentState previous, SelfState self) {
+			double bearing, double distance, OpponentState previous, AdvancedRobot self) {
 		super(name, energy, heading, velocity, previous);
 		
 		this.bearing = bearing;
@@ -28,12 +29,12 @@ public class OpponentState extends BotState<OpponentState> {
 		}
 	}
 
-	private Vector calculatePosition(SelfState self) {
-		double absoluteBearing = self.heading + this.bearing;
+	private Vector calculatePosition(AdvancedRobot self) {
+		double absoluteBearing = self.getHeading() + this.bearing;
 		
 		Vector relative = Vector.getVectorFromAngle(absoluteBearing, distance);
 
-		return relative.add(self.getPosition());
+		return relative.add(new Vector(self.getX(), self.getY()));
 	}
 
 
