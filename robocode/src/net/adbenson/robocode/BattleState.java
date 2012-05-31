@@ -7,37 +7,23 @@ import robocode.ScannedRobotEvent;
 @SuppressWarnings("serial")
 public class BattleState {
 	
-	OpponentState self;
-	OpponentState current;
-	OpponentState previous;
-	OpponentChange change;
+	final SelfState self;
+	final OpponentState opponent;
 	
-	public BattleState(ScannedRobotEvent event, OpponentState previousState) {
-		
-		this.previous = previousState;
-		if (previousState != null) {
-			this.change = new OpponentChange(this.current, previousState);
-		}
-		else {
-			this.change = new OpponentChange();
-		}
-	}
-	
-	public Vector getPosition(AdvancedRobot other) {
-		double bearing = other.getHeadingRadians() + current.getBearingRadians();
-		
-		Vector relative = Vector.getVectorFromAngle(bearing, current.getDistance());
-
-		return relative.add(other.getX(), other.getY());
-	}
-	
-	/**
-	 * Guess if the bot has just stopped
-	 * @return true if the bot was moving, and now is not.
-	 */
-	public boolean stopped() {
-		//Check if the bot's current speed is very low, and it wasn't before
-		return (Math.abs(current.getVelocity()) < 0.01 && Math.abs(change.getVelocity()) > 0.01);
+	public BattleState(SelfState self, OpponentState opp) {
+		this.self = self;
+		this.opponent = opp;
 	}
 
+	public BattleState(AdvancedRobot self, ScannedRobotEvent opp) {
+		this(new SelfState(self), new OpponentState(opp));
+	}
+	
+	public BattleState nextBattleState(AdvancedRobot self, ScannedRobotEvent opp) {
+		return new BattleState(
+				new SelfState(self, this.self),
+				new OpponentState(opp, this.opponent)
+		);
+	}
+	
 }

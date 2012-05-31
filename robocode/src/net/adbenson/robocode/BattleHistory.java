@@ -1,35 +1,47 @@
 package net.adbenson.robocode;
 import java.util.LinkedList;
 
+import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
 @SuppressWarnings("serial")
 public class BattleHistory extends LinkedList<BattleState> {
 	final static int MAX_CAPACITY = 1000;
 	
-	BulletQueue bullets;
+	BulletQueue<OpponentBullet> opponentBullets;
+	BulletQueue<SelfBullet> selfBullets;
 	
-	BattleState last;
-	
-	OpponentState currentOpponent;
+	BattleState current;
 	
 	public BattleHistory() {
 		super();
 		
-		bullets = new BulletQueue();
+		opponentBullets = new BulletQueue<OpponentBullet>();
+		selfBullets = new BulletQueue<SelfBullet>();
 		
-		last = null;
+		current = null;
+	}
+	
+	public boolean addBots(ScannedRobotEvent opp, AdvancedRobot self) {
+		BattleState next;
+		
+		if (current != null) {
+			next = current.nextBattleState(self, opp);
+		}
+		else {
+			next = new BattleState(self, opp);
+		}
+		
+		return this.add(next);
 	}
 
-	public boolean add(ScannedRobotEvent e) {
+	public boolean add(BattleState state) {
 		
 		while (this.size() > MAX_CAPACITY) {
 			this.removeFirst();
 		}
 		
-		BattleState current = new BattleState(e, last.current);
-		
-		this.last = current;
+		this.current = state;
 		
 		return super.add(current);
 	}
