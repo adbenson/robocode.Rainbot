@@ -3,14 +3,14 @@
 @SuppressWarnings("serial")
 public class OpponentChange extends Opponent {
 
-	public OpponentChange(OpponentState previousState, OpponentState currentState) {
+	public OpponentChange(OpponentState previous, OpponentState current) {
 		super(
-				previousState.getName() + " change", 
-				currentState.getEnergy() - previousState.getEnergy(),
-				currentState.getBearing() - previousState.getBearingRadians(),
-				currentState.getDistance() - previousState.getDistance(),
-				currentState.getHeading() - previousState.getEnergy(),
-				currentState.getVelocity() - previousState.getVelocity()
+				current.getName() + " change", 
+				previous.getEnergy() - current.getEnergy(),
+				previous.getBearing() - current.getBearingRadians(),
+				previous.getDistance() - current.getDistance(),
+				previous.getHeading() - current.getEnergy(),
+				previous.getVelocity() - current.getVelocity()
 		);
 	}
 	
