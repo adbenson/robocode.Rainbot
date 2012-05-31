@@ -35,5 +35,19 @@ public class OpponentState extends Opponent {
 				other.getY() + relative.getY()
 		);
 	}
+	
+	/**
+	 * Guess if the bot has just stopped
+	 * @return true if the bot was moving, and now is not.
+	 */
+	public boolean stopped() {
+		if (change != null) {
+			//Check if the bot's current speed is very low, and it wasn't before
+			return (getVelocity() < 0.01 && change.getVelocity() > 0.01);
+		}
+		else {
+			return false;
+		}
+	}
 
 }

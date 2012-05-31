@@ -115,9 +115,9 @@ public class Rainbot extends AdvancedRobot {
 			//Find the opponent's position on the field
 			OpponentState opp = opponentHistory.last;
 			Point2D oppPos = opp.getAbsolutePosition(this);
-System.out.println(opponentHistory.last.change);	
+
 			//Eliminate the possibility of wall crash
-			if (!field.contains(oppPos)) {
+			if (!field.contains(oppPos) && opp.stopped()) {
 				System.out.println("Looks like he crashed!");
 			}
 			else {
