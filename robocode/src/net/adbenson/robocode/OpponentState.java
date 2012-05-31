@@ -21,19 +21,12 @@ public class OpponentState extends Opponent {
 		}
 	}
 	
-	public Vector getRelativePosition(AdvancedRobot other) {
+	public Vector getPosition(AdvancedRobot other) {
 		double bearing = other.getHeadingRadians() + getBearingRadians();
+		
+		Vector relative = Vector.getVectorFromAngle(bearing, getDistance());
 
-		double relativeX = Math.sin(bearing) * getDistance();
-		double relativeY = Math.cos(bearing) * getDistance();
-
-		return new Vector(relativeX, relativeY);
-	}
-
-	public Vector getAbsolutePosition(AdvancedRobot other) {
-		Vector relative = getRelativePosition(other);
-
-		return relative.add(new Vector(other.getX(), other.getY()));
+		return relative.add(other.getX(), other.getY());
 	}
 	
 	/**
