@@ -69,8 +69,8 @@ public class OpponentState extends BotState<OpponentState> {
 		Utility.drawCrosshairs(g, position, 20, 35);
 		
 		g.setColor(Utility.setAlpha(Color.pink, 0.6));
-		Vector bearingLine = Vector.getVectorFromAngle(Utility.oppositeAngle(absoluteBearing), distance).add(position);
-		g.drawLine(position.intX(), position.intY(), bearingLine.intX(), bearingLine.intY());
+		
+		position.drawTo(g, Utility.oppositeAngle(absoluteBearing), distance / 2);
 	}
 
 }

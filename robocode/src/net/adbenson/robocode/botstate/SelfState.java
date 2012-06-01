@@ -4,6 +4,8 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
+import net.adbenson.utility.Vector;
+
 
 import robocode.AdvancedRobot;
 
@@ -47,8 +49,10 @@ public class SelfState extends BotState<SelfState> {
 	}
 
 	public void draw(Graphics2D g) {
-		g.setColor(Color.red);
+		g.setColor(velocity > 0? Color.green : Color.red);
 		g.setStroke(new BasicStroke(5));
+
+		position.drawTo(g, heading, velocity * 5);
 		
 //		g.drawLine(position.intX() - 30, position.intY() - 30, position.intX() - 30, )
 	}
