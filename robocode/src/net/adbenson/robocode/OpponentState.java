@@ -11,15 +11,15 @@ public class OpponentState extends BotState<OpponentState> {
 	public OpponentState(OpponentState previous, OpponentState current) {
 		super(
 			current.name + "_DIFF",
-			previous.energy - current.energy,
-			previous.heading - current.heading,
-			previous.velocity - current.velocity,
-			previous.position.subtract(current.position),
+			current.energy - previous.energy,
+			current.heading - previous.heading,
+			current.velocity - previous.velocity,
+			current.position.subtract(previous.position),
 			null
 		);
 		
-		this.bearing = current.bearing - previous.bearing;
-		this.distance = current.distance - previous.distance;
+		this.bearing = previous.bearing - current.bearing;
+		this.distance = previous.distance - current.distance;
 	}
 
 	public OpponentState(ScannedRobotEvent event, AdvancedRobot self) {
@@ -41,7 +41,7 @@ public class OpponentState extends BotState<OpponentState> {
 	}	
 
 	private static Vector calculatePosition(ScannedRobotEvent current, AdvancedRobot self) {
-		double absoluteBearing = self.getHeading() + current.getBearingRadians();
+		double absoluteBearing = absoluteBearing(self.getHeading(), current.getBearingRadians());
 		
 		Vector relative = Vector.getVectorFromAngle(absoluteBearing, current.getDistance());
 
@@ -51,6 +51,14 @@ public class OpponentState extends BotState<OpponentState> {
 	@Override
 	public OpponentState diff(OpponentState previous) {
 		return new OpponentState(previous, this);
+	}
+
+	public double absoluteBearing(SelfState self) {
+		return absoluteBearing(self.heading, bearing);
+	}
+	
+	private static double absoluteBearing(double self, double opponent) {
+		return self + opponent;
 	}
 
 }
