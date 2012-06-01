@@ -2,17 +2,19 @@ package net.adbenson.robocode;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 
+import net.adbenson.utility.Vector;
+
 
 public abstract class Bullet {
 	
-	final Point2D origin;
+	final Vector origin;
 	final double power;
 	final long time;
 	final double velocity;
 	
 	private double distanceTravelled;
 	
-	public Bullet(Point2D origin, double power, long time) {
+	public Bullet(Vector origin, double power, long time) {
 		this.origin = origin;
 		this.power = power;
 		this.time = time;

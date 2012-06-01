@@ -3,7 +3,8 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Point2D;
+
+import net.adbenson.utility.Vector;
 
 
 public class OpponentBullet extends Bullet {
@@ -11,7 +12,7 @@ public class OpponentBullet extends Bullet {
 	private Ellipse2D radius;
 	private double bearing;
 
-	public OpponentBullet(Point2D origin, double bearing, double power, long time) {
+	public OpponentBullet(Vector origin, double bearing, double power, long time) {
 		super(origin, power, time);
 		this.bearing = bearing;
 	}
@@ -29,8 +30,8 @@ public class OpponentBullet extends Bullet {
 
 		double endX = Math.sin(bearing) * getDistanceTravelled();
 		double endY = Math.cos(bearing) * getDistanceTravelled();
-//System.out.println(bearing);		
-		g.drawLine((int)origin.getX(), (int)origin.getY(), (int)(origin.getX()+endX), (int)(origin.getY()+endY));
+
+		g.drawLine(origin.intX(), origin.intY(), (int)(origin.x+endX), (int)(origin.y + endY));
 		
 	}
 
@@ -42,7 +43,7 @@ public class OpponentBullet extends Bullet {
 	@Override
 	public void updateProjection() {
 		double radius = getDistanceTravelled();
-		this.radius = new Ellipse2D.Double(origin.getX()-radius, origin.getY()-radius, radius*2, radius*2);
+		this.radius = new Ellipse2D.Double(origin.x - radius, origin.y - radius, radius*2, radius*2);
 	}
 
 
