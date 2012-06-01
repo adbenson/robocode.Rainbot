@@ -7,10 +7,10 @@ import net.adbenson.utility.Vector;
 
 public abstract class Bullet {
 	
-	final Vector origin;
-	final double power;
-	final long time;
-	final double velocity;
+	public final Vector origin;
+	public final double power;
+	public final long time;
+	public final double velocity;
 	
 	private double distanceTravelled;
 	

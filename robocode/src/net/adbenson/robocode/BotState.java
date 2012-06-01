@@ -12,8 +12,8 @@ public abstract class BotState<T extends BotState<T>> {
 	public final double velocity;
 	public final Vector position;
 	
-	final T previous;
-	final T change;
+	public final T previous;
+	public final T change;
 	
 	protected BotState(String name, double energy, double heading, double velocity, Vector position, T previous) {
 		this.name = name;

@@ -5,8 +5,8 @@ import robocode.ScannedRobotEvent;
 
 public class OpponentState extends BotState<OpponentState> {
 	
-	final double bearing;
-	final double distance;
+	public final double bearing;
+	public final double distance;
 	
 	public OpponentState(OpponentState previous, OpponentState current) {
 		super(

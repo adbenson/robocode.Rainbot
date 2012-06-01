@@ -6,7 +6,7 @@ import robocode.ScannedRobotEvent;
 
 @SuppressWarnings("serial")
 public class BattleHistory extends LinkedList<BattleState> {
-	final static int MAX_CAPACITY = 1000;
+	private final static int MAX_CAPACITY = 1000;
 	
 	private BulletQueue<OpponentBullet> opponentBullets;
 	private BulletQueue<SelfBullet> selfBullets;

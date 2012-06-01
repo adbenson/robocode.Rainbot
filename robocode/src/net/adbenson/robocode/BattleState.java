@@ -4,8 +4,8 @@ import robocode.ScannedRobotEvent;
 
 public class BattleState {
 	
-	final SelfState self;
-	final OpponentState opponent;
+	public final SelfState self;
+	public final OpponentState opponent;
 	
 	public BattleState(SelfState self, OpponentState opp) {
 		this.self = self;

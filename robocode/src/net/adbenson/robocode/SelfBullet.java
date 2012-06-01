@@ -6,7 +6,7 @@ import net.adbenson.utility.Vector;
 
 public class SelfBullet extends Bullet {
 	
-	final double direction;
+	private final double direction;
 
 	public SelfBullet(Vector origin, double direction, double power, long time) {
 		super(origin, power, time);

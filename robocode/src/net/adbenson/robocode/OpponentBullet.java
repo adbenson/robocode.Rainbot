@@ -10,7 +10,7 @@ import net.adbenson.utility.Vector;
 public class OpponentBullet extends Bullet {
 	
 	private Ellipse2D radius;
-	private double bearing;
+	private final double bearing;
 
 	public OpponentBullet(Vector origin, double bearing, double power, long time) {
 		super(origin, power, time);
