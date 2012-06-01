@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Ellipse2D;
 
+import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 
 
@@ -12,7 +13,7 @@ public class OpponentBullet extends Bullet {
 	private Ellipse2D radius;
 
 	public OpponentBullet(OpponentState opponent, long time) {
-		super(opponent, oppositeAngle(opponent.absoluteBearing), time);
+		super(opponent, Utility.oppositeAngle(opponent.absoluteBearing), time);
 	}
 
 	public Ellipse2D getBulletRadius() {
@@ -21,8 +22,7 @@ public class OpponentBullet extends Bullet {
 
 	@Override
 	public void draw(Graphics2D g) {
-		Color c = Color.white;
-		g.setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), 50));
+		g.setColor(Utility.setAlpha(Color.white, 0.25));
 		g.setStroke(new BasicStroke(3));
 		g.draw(radius);
 
@@ -42,9 +42,5 @@ public class OpponentBullet extends Bullet {
 	public void updateProjection() {
 		double radius = getDistanceTravelled();
 		this.radius = new Ellipse2D.Double(origin.x - radius, origin.y - radius, radius*2, radius*2);
-	}
-
-	public static double oppositeAngle(double angle) {
-		return (angle - Math.PI) % Math.PI * 2;
 	}
 }
