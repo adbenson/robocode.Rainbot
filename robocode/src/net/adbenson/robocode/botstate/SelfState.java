@@ -19,18 +19,11 @@ public class SelfState extends BotState<SelfState> {
 	 * @param previous
 	 * @param current
 	 */
-	private SelfState(SelfState previous, SelfState current) {
-		super(
-				current.name+"_DIFF",
-				previous.energy - current.energy,
-				previous.heading - current.heading,
-				previous.velocity - current.velocity,
-				previous.position.subtract(current.position),
-				null
-		);
+	private SelfState(SelfState previous, SelfState current, boolean add) {
+		super(previous, current, add);
 		
-		this.gunHeading = previous.gunHeading - current.gunHeading;
-		this.gunHeat = previous.gunHeat - current.gunHeat;
+		this.gunHeading = previous.gunHeading + (add? current.gunHeading : -current.gunHeading);
+		this.gunHeat = previous.gunHeat + (add? current.gunHeat : -current.gunHeat);
 	}
 	
 	public SelfState(AdvancedRobot self) {
@@ -45,7 +38,12 @@ public class SelfState extends BotState<SelfState> {
 
 	@Override
 	public SelfState diff(SelfState previous) {
-		return new SelfState(previous, this);
+		return new SelfState(previous, this, false);
+	}
+	
+	@Override
+	public SelfState sum(SelfState other) {
+		return new SelfState(other, this, true);
 	}
 
 	public void draw(Graphics2D g) {

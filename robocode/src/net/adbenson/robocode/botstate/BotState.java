@@ -30,6 +30,18 @@ public abstract class BotState<T extends BotState<T>> {
 			change = this.diff(previous);
 		}
 	}
+	
+	protected <U extends BotState<U>>BotState(U A, U B, boolean add) {
+		this(
+				B.name+"_DIFF",
+				A.energy + (add? B.energy : -B.energy),
+				A.heading + (add? B.heading : -B.heading),
+				A.velocity + (add? B.velocity : -B.velocity),
+				add? A.position.add(B.position) 
+						: A.position.subtract(B.position),
+			null
+		);
+	}
 
 	public BotState(ScannedRobotEvent bot, Vector position) {
 		this(
@@ -58,6 +70,8 @@ public abstract class BotState<T extends BotState<T>> {
 	}
 	
 	public abstract T diff(T previous);
+	
+	public abstract T sum(T other);
 	
 	/**
 	 * Guess if the bot has just stopped
