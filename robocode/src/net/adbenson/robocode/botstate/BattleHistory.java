@@ -60,6 +60,10 @@ public class BattleHistory extends LinkedList<BattleState> {
 	public BattleState getCurrentState() {
 		return currentState;
 	}
+	
+	public OpponentState getCurrentOpponent() {
+		return currentState.opponent;
+	}
 
 	public void opponentFired() {
 		opponentBullets.add(
