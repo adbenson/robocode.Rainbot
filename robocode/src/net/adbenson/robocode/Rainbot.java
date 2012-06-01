@@ -133,9 +133,7 @@ public class Rainbot extends AdvancedRobot {
 			}
 			else {
 				System.out.println("Opponent fire detected");
-				//Power level of the bullet will be the inverse of the energy drop
-				double power = -(history.getCurrentState().opponent.change.energy);
-				history.getOpponentBullets().add(new OpponentBullet(opponentPos, opponent.bearing, power, getTime()));
+				history.opponentFired();
 			}
 		}
 		
@@ -146,12 +144,12 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	public void setFire(double power) {
-		history.getSelfBullets().add(new SelfBullet(getPosition(), this.getGunHeadingRadians(), power, getTime()));
+		history.selfFired();
 		super.setFire(power);
 	}
 	
 	public void onScannedRobot(ScannedRobotEvent e) {
-		history.addBots(this, e);
+		history.addBots(this, e, getTime());
 		
 		if (history.getCurrentState().opponent.change != null) {
 			status.opponentEnergyDrop = history.getCurrentState().opponent.change.energy <= -Rules.MIN_BULLET_POWER;

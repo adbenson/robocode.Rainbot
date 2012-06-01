@@ -22,14 +22,14 @@ public class BattleHistory extends LinkedList<BattleState> {
 		currentState = null;
 	}
 	
-	public boolean addBots(AdvancedRobot self, ScannedRobotEvent opp) {
+	public boolean addBots(AdvancedRobot self, ScannedRobotEvent opp, long time) {
 		BattleState next;
 		
 		if (getCurrentState() != null) {
-			next = getCurrentState().nextBattleState(self, opp);
+			next = getCurrentState().nextBattleState(self, opp, time);
 		}
 		else {
-			next = new BattleState(self, opp);
+			next = new BattleState(self, opp, time);
 		}
 		
 		return this.add(next);
@@ -56,5 +56,23 @@ public class BattleHistory extends LinkedList<BattleState> {
 
 	BattleState getCurrentState() {
 		return currentState;
+	}
+
+	public void opponentFired() {
+		opponentBullets.add(
+				new OpponentBullet(
+						currentState.opponent,
+						currentState.time
+				)
+		);
+	}
+
+	public void selfFired() {
+		selfBullets.add(
+				new SelfBullet(
+						currentState.self,
+						currentState.time
+				)
+		);
 	}
 }
