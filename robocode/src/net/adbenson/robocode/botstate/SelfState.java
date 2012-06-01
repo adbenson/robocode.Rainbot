@@ -4,9 +4,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
-import net.adbenson.utility.Vector;
-
-
 import robocode.AdvancedRobot;
 
 public class SelfState extends BotState<SelfState> {

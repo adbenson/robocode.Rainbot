@@ -1,6 +1,5 @@
 package net.adbenson.robocode.bullet;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 
 import net.adbenson.robocode.botstate.BotState;
 import net.adbenson.utility.Vector;
