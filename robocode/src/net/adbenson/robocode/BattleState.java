@@ -6,20 +6,23 @@ public class BattleState {
 	
 	public final SelfState self;
 	public final OpponentState opponent;
+	public final long time;
 	
-	public BattleState(SelfState self, OpponentState opp) {
+	public BattleState(SelfState self, OpponentState opp, long time) {
 		this.self = self;
 		this.opponent = opp;
+		this.time = time;
 	}
 
-	public BattleState(AdvancedRobot self, ScannedRobotEvent opp) {
-		this(new SelfState(self), new OpponentState(opp, self));
+	public BattleState(AdvancedRobot self, ScannedRobotEvent opp, long time) {
+		this(new SelfState(self), new OpponentState(opp, self), time);
 	}
 	
-	public BattleState nextBattleState(AdvancedRobot self, ScannedRobotEvent opp) {
+	public BattleState nextBattleState(AdvancedRobot self, ScannedRobotEvent opp, long time) {
 		return new BattleState(
 				new SelfState(self, this.self),
-				new OpponentState(opp, this.opponent, self)
+				new OpponentState(opp, this.opponent, self),
+				time
 		);
 	}
 	
