@@ -128,7 +128,7 @@ public class Rainbot extends AdvancedRobot {
 			Vector opponentPos = opponent.getPosition();
 
 			//Eliminate the possibility of wall crash
-			if (!field.contains(opponentPos) && opponent.stopped()) {
+			if (!field.contains(opponentPos.toPoint()) && opponent.stopped()) {
 				System.out.println("Looks like he crashed!");
 			}
 			else {

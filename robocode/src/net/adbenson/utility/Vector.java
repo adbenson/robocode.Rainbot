@@ -36,7 +36,7 @@ public class Vector {
 	}
 	
 	public double magnitude() {
-		return new Point2D.Double(x, y).distance(0, 0);
+		return toPoint().distance(0, 0);
 	}
 
 	public Vector(double x, double y) {
@@ -85,6 +85,10 @@ public class Vector {
 		double y = Math.cos(angle) * length;
 
 		return new Vector(x, y);
+	}
+
+	public Point2D toPoint() {
+		return new Point2D.Double(x, y);
 	}
 
 }
