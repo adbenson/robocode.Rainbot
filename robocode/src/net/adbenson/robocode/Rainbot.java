@@ -37,7 +37,6 @@ public class Rainbot extends AdvancedRobot {
 	
 	private Status status;
 	
-	private BulletQueue<SelfBullet> bullets;
 	private int favoredTurnDirection;
 	
 	private static Rectangle2D field;
@@ -54,10 +53,7 @@ public class Rainbot extends AdvancedRobot {
 		
 		rainbowMode = false;
 			
-		status = new Status();
-		
-		bullets = new BulletQueue<SelfBullet>();
-	
+		status = new Status();	
 	}
 	
 	public void run() {
@@ -79,8 +75,8 @@ public class Rainbot extends AdvancedRobot {
 	        
 	    	detectOpponentFire();
 	    	
-	    	bullets.updateAll(getTime());
-	    	history.opponentBullets.updateAll(getTime());
+	    	history.getSelfBullets().updateAll(getTime());
+	    	history.getOpponentBullets().updateAll(getTime());
 	    	
 	    	//Square off!
 	    	faceOpponent();
@@ -98,7 +94,7 @@ public class Rainbot extends AdvancedRobot {
 	
 	private void faceOpponent() {
     	if (!history.isEmpty()) {
-    		OpponentState o = history.current.opponent;
+    		OpponentState o = history.getCurrentState().opponent;
     		double offFace = o.bearing;
     		//We don't care which direction we face, so treat either direction the same.
     		if (offFace < 0) {
@@ -128,7 +124,7 @@ public class Rainbot extends AdvancedRobot {
 				!status.collidedWithOpponent) {
 		
 			//Find the opponent's position on the field
-			OpponentState opponent = history.current.opponent;
+			OpponentState opponent = history.getCurrentState().opponent;
 			Vector opponentPos = opponent.getPosition();
 
 			//Eliminate the possibility of wall crash
@@ -138,8 +134,8 @@ public class Rainbot extends AdvancedRobot {
 			else {
 				System.out.println("Opponent fire detected");
 				//Power level of the bullet will be the inverse of the energy drop
-				double power = -(history.current.opponent.change.energy);
-				history.opponentBullets.add(new OpponentBullet(opponentPos, opponent.bearing, power, getTime()));
+				double power = -(history.getCurrentState().opponent.change.energy);
+				history.getOpponentBullets().add(new OpponentBullet(opponentPos, opponent.bearing, power, getTime()));
 			}
 		}
 		
@@ -150,15 +146,15 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	public void setFire(double power) {
-		bullets.add(new SelfBullet(getPosition(), this.getGunHeadingRadians(), power, getTime()));
+		history.getSelfBullets().add(new SelfBullet(getPosition(), this.getGunHeadingRadians(), power, getTime()));
 		super.setFire(power);
 	}
 	
 	public void onScannedRobot(ScannedRobotEvent e) {
 		history.addBots(this, e);
 		
-		if (history.current.opponent.change != null) {
-			status.opponentEnergyDrop = history.current.opponent.change.energy <= -Rules.MIN_BULLET_POWER;
+		if (history.getCurrentState().opponent.change != null) {
+			status.opponentEnergyDrop = history.getCurrentState().opponent.change.energy <= -Rules.MIN_BULLET_POWER;
 		}
 		
 		maintainRadarLock(e);
@@ -177,7 +173,7 @@ public class Rainbot extends AdvancedRobot {
 		g.setColor(Color.red);
 		g.draw(field);
 		
-		history.opponentBullets.draw(g);
+		history.getOpponentBullets().draw(g);
 	}
 	
 	public void onCustomEvent(CustomEvent event) {
@@ -215,7 +211,7 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	public void onBulletMissed(BulletMissedEvent event) {
-		bullets.removeFirst();
+		history.getSelfBullets().removeFirst();
 	}
 	
 	public void onHitByBullet(HitByBulletEvent event) {

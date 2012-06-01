@@ -8,10 +8,10 @@ import robocode.ScannedRobotEvent;
 public class BattleHistory extends LinkedList<BattleState> {
 	final static int MAX_CAPACITY = 1000;
 	
-	BulletQueue<OpponentBullet> opponentBullets;
-	BulletQueue<SelfBullet> selfBullets;
+	private BulletQueue<OpponentBullet> opponentBullets;
+	private BulletQueue<SelfBullet> selfBullets;
 	
-	BattleState current;
+	private BattleState currentState;
 	
 	public BattleHistory() {
 		super();
@@ -19,14 +19,14 @@ public class BattleHistory extends LinkedList<BattleState> {
 		opponentBullets = new BulletQueue<OpponentBullet>();
 		selfBullets = new BulletQueue<SelfBullet>();
 		
-		current = null;
+		currentState = null;
 	}
 	
 	public boolean addBots(AdvancedRobot self, ScannedRobotEvent opp) {
 		BattleState next;
 		
-		if (current != null) {
-			next = current.nextBattleState(self, opp);
+		if (getCurrentState() != null) {
+			next = getCurrentState().nextBattleState(self, opp);
 		}
 		else {
 			next = new BattleState(self, opp);
@@ -41,8 +41,20 @@ public class BattleHistory extends LinkedList<BattleState> {
 			this.removeFirst();
 		}
 		
-		this.current = state;
+		currentState = state;
 		
-		return super.add(current);
+		return super.add(getCurrentState());
+	}
+
+	BulletQueue<SelfBullet> getSelfBullets() {
+		return selfBullets;
+	}
+
+	BulletQueue<OpponentBullet> getOpponentBullets() {
+		return opponentBullets;
+	}
+
+	BattleState getCurrentState() {
+		return currentState;
 	}
 }
