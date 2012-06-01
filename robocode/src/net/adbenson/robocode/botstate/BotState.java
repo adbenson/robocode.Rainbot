@@ -35,7 +35,7 @@ public abstract class BotState<T extends BotState<T>> {
 		this(
 			bot.getName(),
 			bot.getEnergy(),
-			bot.getHeading(),
+			bot.getHeadingRadians(),
 			bot.getVelocity(),
 			position,
 			null
@@ -46,7 +46,7 @@ public abstract class BotState<T extends BotState<T>> {
 		this(
 				bot.getName(),
 				bot.getEnergy(),
-				bot.getHeading(),
+				bot.getHeadingRadians(),
 				bot.getVelocity(),
 				new Vector(bot.getX(), bot.getY()),
 				previous
