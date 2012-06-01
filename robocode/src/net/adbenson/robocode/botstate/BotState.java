@@ -1,5 +1,6 @@
 package net.adbenson.robocode.botstate;
 
+import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
@@ -34,11 +35,16 @@ public abstract class BotState<T extends BotState<T>> {
 	protected <U extends BotState<U>>BotState(U a, U b, boolean add) {
 		this(
 				b.name+"_DIFF",
+				
 				a.energy + (add? b.energy : -b.energy),
-				a.heading + (add? b.heading : -b.heading),
+				
+				(add? a.heading + b.heading : 
+						Utility.angleDifference(a.heading, b.heading)),
+						
 				a.velocity + (add? b.velocity : -b.velocity),
-				add? a.position.add(b.position) 
-						: a.position.subtract(b.position),
+				
+				(add? a.position.add(b.position) 
+						: a.position.subtract(b.position)),
 			null
 		);	
 	}
@@ -80,6 +86,56 @@ public abstract class BotState<T extends BotState<T>> {
 	public boolean stopped() {
 		//Check if the bot's current speed is very low, and it wasn't before
 		return (Math.abs(velocity) < 0.01 && Math.abs(change.velocity) > 0.01);
+	}
+	
+	public T changeOverTurns(int turns) {
+		return changeOverTurns(turns, 0);
+	}
+	
+	public T changeOverTurns(int turns, int start) {
+		//Case 1: we don't need to travel any deeper, start summing
+		if (start <= 0) {
+			
+			//Case 1a: We're only looking for the change over 1 turn 
+			if (turns <= 1) {
+				return change;
+			}
+			//Case 2a: We need to find the sum of this plus t-1 turns
+			else {
+				return sum(turns-1);
+			}
+			
+		}
+		//Case 2: We're not deep enough yet, travel down
+		else {
+			
+			//Case 2a: Don't start summing yet, go at least 1 further
+			if (previous != null) {
+				return previous.changeOverTurns(turns, start - 1);
+			}
+			//Case 2b: Can't go any further. We were asked for more than is available. 
+			else {
+				return null;
+			}
+			
+		}
+	}
+	
+	//Helper method for ChangeOverTurns. It was getting hairy in there
+	private T sum(int turns) {
+		//Assume we'll return 'change', whether it's null or not
+		T changeSum = change;
+		
+		if (change != null && previous != null) {
+			T toAdd = previous.changeOverTurns(turns);
+			
+			//toAdd will return null if previous doesn't have a change history
+			if (toAdd != null) {
+				changeSum = change.sum(toAdd);
+			}
+		}
+		
+		return changeSum;
 	}
 
 }
