@@ -20,7 +20,7 @@ public abstract class Bullet {
 	public Bullet(BotState<?> bot, double heading, long time) {
 		this.bot = bot;
 		this.origin = bot.position;
-		this.power = bot.change.energy;
+		this.power = -bot.change.energy;
 		this.heading = heading;
 		this.time = time;
 		this.velocity = velocity();
