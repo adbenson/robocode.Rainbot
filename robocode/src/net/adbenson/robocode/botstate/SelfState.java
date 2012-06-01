@@ -4,6 +4,8 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
+import net.adbenson.utility.Utility;
+
 import robocode.AdvancedRobot;
 
 public class SelfState extends BotState<SelfState> {
@@ -14,7 +16,9 @@ public class SelfState extends BotState<SelfState> {
 	protected SelfState(SelfState a, SelfState b, boolean add) {
 		super(a, b, add);
 		
-		this.gunHeading = a.gunHeading + (add? b.gunHeading : -b.gunHeading);
+		this.gunHeading = add? (a.gunHeading + b.gunHeading) : 
+			Utility.angleDifference(a.gunHeading, b.gunHeading);
+		
 		this.gunHeat = a.gunHeat + (add? b.gunHeat : -b.gunHeat);
 	}
 	
