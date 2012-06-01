@@ -8,6 +8,7 @@ import net.adbenson.robocode.botstate.BattleHistory;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.trigger.Trigger;
 import net.adbenson.robocode.trigger.TriggerSet;
+import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
 import robocode.BulletHitBulletEvent;
@@ -24,7 +25,6 @@ import robocode.util.Utils;
 
 public class Rainbot extends AdvancedRobot {
 	
-	public static final double HALF_PI = Math.PI / 2d;
 	public static final double MAX_TURN = Math.PI / 5d;
 	
 	private BattleHistory history;
@@ -123,7 +123,7 @@ System.out.println(last5.heading);
     		}
     		   		
     		//Offset so that "facing" is 0
-    		offFace -= HALF_PI;
+    		offFace -= Utility.HALF_PI;
     		
     		//Turn farther away the closer we are - by 1/2 field away, straighten out
     		double distanceRatio = (preferredDistance - o.distance) / (preferredDistance);   		
