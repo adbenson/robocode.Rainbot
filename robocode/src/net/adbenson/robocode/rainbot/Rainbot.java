@@ -41,9 +41,10 @@ public class Rainbot extends AdvancedRobot {
 	
 	private Status status;
 	
-	private int favoredTurnDirection;
+	private int preferredDirection;
 	
 	private static Rectangle2D field;
+	private Rectangle2D safety;
 	private double preferredDistance;
 	
 	public Rainbot() {
@@ -58,10 +59,22 @@ public class Rainbot extends AdvancedRobot {
 		rainbowMode = false;
 			
 		status = new Status();	
+		
+		preferredDirection = -1;
 	}
 	
 	public void run() {
-		field = new Rectangle2D.Double(19, 19, getBattleFieldWidth()-38, getBattleFieldHeight()-38);
+		Vector botSize = new Vector(getWidth(), getHeight());
+		
+		field = new Rectangle2D.Double(
+				(botSize.x/2)+1, (botSize.y/2)+1, 
+				getBattleFieldWidth()-(botSize.x-2), getBattleFieldHeight()-(botSize.y-2)
+		);
+		safety = new Rectangle2D.Double(
+				botSize.x, botSize.y, 
+				getBattleFieldWidth()-(botSize.x*2), getBattleFieldHeight()-(botSize.y*2)
+		);
+		
 		preferredDistance = new Vector(field).magnitude() / 2;
 		
 		setAdjustGunForRobotTurn(true);
@@ -76,18 +89,18 @@ public class Rainbot extends AdvancedRobot {
 	    
 	    do {
 	    	hueShift();
-	        
-	    	detectOpponentFire();
-	    	
-	    	history.getSelfBullets().updateAll(getTime());
-	    	history.getOpponentBullets().updateAll(getTime());
 	    	
 	    	//Square off!
 	    	faceOpponent();
+	        
+	    	detectOpponentFire();
+	    		    	
+	    	history.getSelfBullets().updateAll(getTime());
+	    	history.getOpponentBullets().updateAll(getTime());
+	    	Vector projection = getPosition().project(getHeadingRadians(), getVelocity());
 	    	
-//	    	setFire(0.3);
-//			double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
-//			setTurnGunRightRadians(Utils.normalRelativeAngle(absoluteBearing - getGunHeadingRadians()));
+	    	
+			setAhead(Double.POSITIVE_INFINITY * preferredDirection);
 	       	
 	    	//Reset all statuses so they will be "clean" for the next round of events
 	        status.reset();
@@ -109,11 +122,12 @@ public class Rainbot extends AdvancedRobot {
     		offFace -= HALF_PI;
     		
     		//Turn farther away the closer we are - by 1/2 field away, straighten out
-    		double distanceRatio = Math.max(0, (preferredDistance - o.distance) / (preferredDistance));   		
-    		offFace += MAX_TURN * distanceRatio;
+    		double distanceRatio = (preferredDistance - o.distance) / (preferredDistance);   		
+    		offFace += MAX_TURN * distanceRatio * preferredDirection;
     		    		
     		//Multiply the offset - we don't have all day! Move it! (If it's too high, it introduces jitter.)
-    		setTurnRight(offFace * 100); 		
+    		setTurnRight(offFace * 10); 
+    		
     	}
     	else {
     		//Nuthin' better to do...
@@ -138,8 +152,12 @@ public class Rainbot extends AdvancedRobot {
 			else {
 				System.out.println("Opponent fire detected");
 				history.opponentFired();
+				preferredDirection = -preferredDirection;
+System.out.println(preferredDirection);				
 			}
 		}
+		
+
 		
 	}
 
@@ -175,6 +193,10 @@ public class Rainbot extends AdvancedRobot {
 		if (!history.isEmpty()) {
 			g.setColor(Color.red);
 			g.draw(field);
+			
+			g.setColor(Color.green);
+			g.draw(safety);
+			
 			g.setStroke(new BasicStroke(3));
 			
 			history.getOpponentBullets().draw(g);
@@ -276,5 +298,6 @@ public class Rainbot extends AdvancedRobot {
 			opponentEnergyDrop = false;
 		}
 	}
+
 	
 }
