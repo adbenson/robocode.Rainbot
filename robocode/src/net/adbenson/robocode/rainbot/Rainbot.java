@@ -99,8 +99,12 @@ public class Rainbot extends AdvancedRobot {
 	    	history.getOpponentBullets().updateAll(getTime());
 	    	Vector projection = getPosition().project(getHeadingRadians(), getVelocity());
 	    	
+	    	if (!history.isEmpty()) {
+	    	OpponentState last5 = history.getCurrentOpponent().changeOverTurns(5);
+System.out.println(last5.heading);	 
+	    	}
 	    	
-			setAhead(Double.POSITIVE_INFINITY * preferredDirection);
+//			setAhead(Double.POSITIVE_INFINITY * preferredDirection);
 	       	
 	    	//Reset all statuses so they will be "clean" for the next round of events
 	        status.reset();
