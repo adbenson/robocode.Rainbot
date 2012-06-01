@@ -1,6 +1,7 @@
-package net.adbenson.robocode;
+package net.adbenson.robocode.bullet;
 import java.awt.Graphics2D;
 import java.util.LinkedList;
+
 
 
 @SuppressWarnings("serial")

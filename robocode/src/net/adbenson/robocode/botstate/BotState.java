@@ -1,4 +1,4 @@
-package net.adbenson.robocode;
+package net.adbenson.robocode.botstate;
 
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;

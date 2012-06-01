@@ -1,4 +1,4 @@
-package net.adbenson.robocode;
+package net.adbenson.robocode.botstate;
 import java.awt.Color;
 import java.awt.Graphics2D;
 

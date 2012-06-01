@@ -1,9 +1,13 @@
-package net.adbenson.robocode;
+package net.adbenson.robocode.rainbot;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 
+import net.adbenson.robocode.botstate.BattleHistory;
+import net.adbenson.robocode.botstate.OpponentState;
+import net.adbenson.robocode.trigger.Trigger;
+import net.adbenson.robocode.trigger.TriggerSet;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
 import robocode.BulletHitBulletEvent;

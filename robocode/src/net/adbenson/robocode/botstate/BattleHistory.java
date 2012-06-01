@@ -1,6 +1,9 @@
-package net.adbenson.robocode;
+package net.adbenson.robocode.botstate;
 import java.util.LinkedList;
 
+import net.adbenson.robocode.bullet.BulletQueue;
+import net.adbenson.robocode.bullet.OpponentBullet;
+import net.adbenson.robocode.bullet.SelfBullet;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
@@ -46,15 +49,15 @@ public class BattleHistory extends LinkedList<BattleState> {
 		return super.add(getCurrentState());
 	}
 
-	BulletQueue<SelfBullet> getSelfBullets() {
+	public BulletQueue<SelfBullet> getSelfBullets() {
 		return selfBullets;
 	}
 
-	BulletQueue<OpponentBullet> getOpponentBullets() {
+	public BulletQueue<OpponentBullet> getOpponentBullets() {
 		return opponentBullets;
 	}
 
-	BattleState getCurrentState() {
+	public BattleState getCurrentState() {
 		return currentState;
 	}
 

@@ -1,4 +1,4 @@
-package net.adbenson.robocode;
+package net.adbenson.robocode.trigger;
 import robocode.Condition;
 
 

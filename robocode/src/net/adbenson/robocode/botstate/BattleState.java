@@ -1,4 +1,4 @@
-package net.adbenson.robocode;
+package net.adbenson.robocode.botstate;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
