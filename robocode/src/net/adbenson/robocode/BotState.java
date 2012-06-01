@@ -10,17 +10,17 @@ public abstract class BotState<T extends BotState<T>> {
 	public final double energy;
 	public final double heading;
 	public final double velocity;
-	
-	public Vector position;
+	public final Vector position;
 	
 	final T previous;
 	final T change;
 	
-	protected BotState(String name, double energy, double heading, double velocity, T previous) {
+	protected BotState(String name, double energy, double heading, double velocity, Vector position, T previous) {
 		this.name = name;
 		this.energy = energy;
 		this.heading = heading;
 		this.velocity = velocity;
+		this.position = position;
 		
 		this.previous = previous;
 		if (previous == null) {
@@ -31,12 +31,13 @@ public abstract class BotState<T extends BotState<T>> {
 		}
 	}
 
-	public BotState(ScannedRobotEvent bot) {
+	public BotState(ScannedRobotEvent bot, Vector position) {
 		this(
 			bot.getName(),
 			bot.getEnergy(),
 			bot.getHeading(),
 			bot.getVelocity(),
+			position,
 			null
 		);
 	}
@@ -47,16 +48,13 @@ public abstract class BotState<T extends BotState<T>> {
 				bot.getEnergy(),
 				bot.getHeading(),
 				bot.getVelocity(),
+				new Vector(bot.getX(), bot.getY()),
 				previous
 		);
 	}
 	
 	public Vector getPosition() {
 		return position;
-	}
-	
-	protected void setPosition(Vector position) {
-		this.position = position;
 	}
 	
 	public abstract T diff(T previous);
