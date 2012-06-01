@@ -8,5 +8,4 @@ public class OpponentStateChange extends OpponentState implements BotStateChange
 		// TODO Auto-generated constructor stub
 	}
 
-	
 }

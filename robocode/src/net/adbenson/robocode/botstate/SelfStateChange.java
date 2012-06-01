@@ -7,5 +7,4 @@ public class SelfStateChange extends SelfState implements BotStateChange {
 		super(previous, current, add);
 		// TODO Auto-generated constructor stub
 	}
-	
 }
