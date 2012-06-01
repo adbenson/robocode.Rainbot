@@ -4,6 +4,8 @@ import robocode.AdvancedRobot;
 
 public class SelfState extends BotState<SelfState> {
 
+	public final double gunHeading;
+
 	/**
 	 * Differential constructor - only to be used interally for generating change objects.
 	 * @param previous
@@ -17,7 +19,9 @@ public class SelfState extends BotState<SelfState> {
 				previous.velocity - current.velocity,
 				previous.position.subtract(current.position),
 				null
-				);
+		);
+		
+		this.gunHeading = previous.gunHeading - current.gunHeading;
 	}
 	
 	public SelfState(AdvancedRobot self) {
@@ -26,6 +30,7 @@ public class SelfState extends BotState<SelfState> {
 
 	public SelfState(AdvancedRobot self, SelfState previous) {
 		super(self, previous);
+		this.gunHeading = self.getGunHeading();
 	}
 
 	@Override
