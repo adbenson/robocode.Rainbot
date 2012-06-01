@@ -168,13 +168,17 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	public void onPaint(Graphics2D g) {
-		g.setColor(Color.red);
-		g.draw(field);
-		g.setStroke(new BasicStroke(3));
-		
-		history.getOpponentBullets().draw(g);
-		
-		history.getCurrentState().opponent.draw(g);
+		if (!history.isEmpty()) {
+			g.setColor(Color.red);
+			g.draw(field);
+			g.setStroke(new BasicStroke(3));
+			
+			history.getOpponentBullets().draw(g);
+			
+			history.getCurrentState().opponent.draw(g);
+			
+			history.getCurrentState().self.draw(g);
+		}
 	}
 	
 	public void onCustomEvent(CustomEvent event) {
