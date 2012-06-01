@@ -11,8 +11,8 @@ public class OpponentBullet extends Bullet {
 	
 	private Ellipse2D radius;
 
-	public OpponentBullet(OpponentState opponent, double heading, long time) {
-		super(opponent, heading, time);
+	public OpponentBullet(OpponentState opponent, long time) {
+		super(opponent, opponent.absoluteBearing, time);
 	}
 
 	public Ellipse2D getBulletRadius() {

@@ -6,6 +6,7 @@ import robocode.ScannedRobotEvent;
 public class OpponentState extends BotState<OpponentState> {
 	
 	public final double bearing;
+	public final double absoluteBearing;
 	public final double distance;
 	
 	public OpponentState(OpponentState previous, OpponentState current) {
@@ -19,6 +20,7 @@ public class OpponentState extends BotState<OpponentState> {
 		);
 		
 		this.bearing = previous.bearing - current.bearing;
+		this.absoluteBearing = previous.absoluteBearing - current.absoluteBearing;
 		this.distance = previous.distance - current.distance;
 	}
 
@@ -37,11 +39,12 @@ public class OpponentState extends BotState<OpponentState> {
 		);
 		
 		this.bearing = current.getBearingRadians();
+		this.absoluteBearing = absoluteBearing(self, current);
 		this.distance = current.getDistance();
 	}	
 
 	private static Vector calculatePosition(ScannedRobotEvent current, AdvancedRobot self) {
-		double absoluteBearing = absoluteBearing(self.getHeading(), current.getBearingRadians());
+		double absoluteBearing = absoluteBearing(self, current);
 		
 		Vector relative = Vector.getVectorFromAngle(absoluteBearing, current.getDistance());
 
@@ -52,13 +55,9 @@ public class OpponentState extends BotState<OpponentState> {
 	public OpponentState diff(OpponentState previous) {
 		return new OpponentState(previous, this);
 	}
-
-	public double absoluteBearing(SelfState self) {
-		return absoluteBearing(self.heading, bearing);
-	}
 	
-	private static double absoluteBearing(double self, double opponent) {
-		return self + opponent;
+	private static double absoluteBearing(AdvancedRobot self, ScannedRobotEvent current) {
+		return self.getHeadingRadians() + current.getBearingRadians();
 	}
 
 }
