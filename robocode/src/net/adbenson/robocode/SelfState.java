@@ -1,10 +1,15 @@
 package net.adbenson.robocode;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+
 import robocode.AdvancedRobot;
 
 public class SelfState extends BotState<SelfState> {
 
 	public final double gunHeading;
+	public final double gunHeat;
 
 	/**
 	 * Differential constructor - only to be used interally for generating change objects.
@@ -22,6 +27,7 @@ public class SelfState extends BotState<SelfState> {
 		);
 		
 		this.gunHeading = previous.gunHeading - current.gunHeading;
+		this.gunHeat = previous.gunHeat - current.gunHeat;
 	}
 	
 	public SelfState(AdvancedRobot self) {
@@ -31,11 +37,19 @@ public class SelfState extends BotState<SelfState> {
 	public SelfState(AdvancedRobot self, SelfState previous) {
 		super(self, previous);
 		this.gunHeading = self.getGunHeading();
+		this.gunHeat = self.getGunHeat();
 	}
 
 	@Override
 	public SelfState diff(SelfState previous) {
 		return new SelfState(previous, this);
+	}
+
+	public void draw(Graphics2D g) {
+		g.setColor(Color.red);
+		g.setStroke(new BasicStroke(5));
+		
+//		g.drawLine(position.intX() - 30, position.intY() - 30, position.intX() - 30, )
 	}
 
 }
