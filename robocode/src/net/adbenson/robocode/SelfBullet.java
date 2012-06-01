@@ -1,16 +1,11 @@
 package net.adbenson.robocode;
 import java.awt.Graphics2D;
 
-import net.adbenson.utility.Vector;
-
 
 public class SelfBullet extends Bullet {
 	
-	private final double direction;
-
-	public SelfBullet(Vector origin, double direction, double power, long time) {
-		super(origin, power, time);
-		this.direction = direction;
+	public SelfBullet(SelfState self, long time) {
+		super(self, self.gunHeading, time);
 	}
 
 	@Override

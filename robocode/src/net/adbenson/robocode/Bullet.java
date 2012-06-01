@@ -7,16 +7,21 @@ import net.adbenson.utility.Vector;
 
 public abstract class Bullet {
 	
+	public final BotState<?> bot;
+	
 	public final Vector origin;
 	public final double power;
+	public final double heading;
 	public final long time;
 	public final double velocity;
 	
 	private double distanceTravelled;
 	
-	public Bullet(Vector origin, double power, long time) {
-		this.origin = origin;
-		this.power = power;
+	public Bullet(BotState<?> bot, double heading, long time) {
+		this.bot = bot;
+		this.origin = bot.position;
+		this.power = bot.change.energy;
+		this.heading = heading;
 		this.time = time;
 		this.velocity = velocity();
 	}

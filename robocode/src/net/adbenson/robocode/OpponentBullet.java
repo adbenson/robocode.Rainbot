@@ -10,13 +10,11 @@ import net.adbenson.utility.Vector;
 public class OpponentBullet extends Bullet {
 	
 	private Ellipse2D radius;
-	private final double bearing;
 
-	public OpponentBullet(Vector origin, double bearing, double power, long time) {
-		super(origin, power, time);
-		this.bearing = bearing;
+	public OpponentBullet(OpponentState opponent, double heading, long time) {
+		super(opponent, heading, time);
 	}
-	
+
 	public Ellipse2D getBulletRadius() {
 		return radius;
 	}
@@ -28,8 +26,8 @@ public class OpponentBullet extends Bullet {
 		g.setStroke(new BasicStroke(3));
 		g.draw(radius);
 
-		double endX = Math.sin(bearing) * getDistanceTravelled();
-		double endY = Math.cos(bearing) * getDistanceTravelled();
+		double endX = Math.sin(heading) * getDistanceTravelled();
+		double endY = Math.cos(heading) * getDistanceTravelled();
 
 		g.drawLine(origin.intX(), origin.intY(), (int)(origin.x+endX), (int)(origin.y + endY));
 		
