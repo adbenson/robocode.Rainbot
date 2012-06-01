@@ -19,7 +19,7 @@ public class SelfState extends BotState<SelfState> {
 	 * @param previous
 	 * @param current
 	 */
-	private SelfState(SelfState previous, SelfState current, boolean add) {
+	protected SelfState(SelfState previous, SelfState current, boolean add) {
 		super(previous, current, add);
 		
 		this.gunHeading = previous.gunHeading + (add? current.gunHeading : -current.gunHeading);
