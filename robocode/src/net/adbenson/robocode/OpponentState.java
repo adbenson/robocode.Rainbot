@@ -1,4 +1,8 @@
 package net.adbenson.robocode;
+import java.awt.Color;
+import java.awt.Graphics2D;
+
+import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
@@ -58,6 +62,15 @@ public class OpponentState extends BotState<OpponentState> {
 	
 	private static double absoluteBearing(AdvancedRobot self, ScannedRobotEvent current) {
 		return self.getHeadingRadians() + current.getBearingRadians();
+	}
+
+	public void draw(Graphics2D g) {
+		g.setColor(Utility.setAlpha(Color.orange, 0.6));
+		Utility.drawCrosshairs(g, position, 20, 35);
+		
+		g.setColor(Utility.setAlpha(Color.pink, 0.6));
+		Vector bearingLine = Vector.getVectorFromAngle(Utility.oppositeAngle(absoluteBearing), distance).add(position);
+		g.drawLine(position.intX(), position.intY(), bearingLine.intX(), bearingLine.intY());
 	}
 
 }

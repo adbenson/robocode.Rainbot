@@ -1,7 +1,7 @@
 package net.adbenson.robocode;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 import net.adbenson.utility.Vector;
@@ -170,8 +170,11 @@ public class Rainbot extends AdvancedRobot {
 	public void onPaint(Graphics2D g) {
 		g.setColor(Color.red);
 		g.draw(field);
+		g.setStroke(new BasicStroke(3));
 		
 		history.getOpponentBullets().draw(g);
+		
+		history.getCurrentState().opponent.draw(g);
 	}
 	
 	public void onCustomEvent(CustomEvent event) {

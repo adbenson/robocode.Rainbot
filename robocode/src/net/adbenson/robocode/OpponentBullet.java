@@ -23,7 +23,6 @@ public class OpponentBullet extends Bullet {
 	@Override
 	public void draw(Graphics2D g) {
 		g.setColor(Utility.setAlpha(Color.white, 0.25));
-		g.setStroke(new BasicStroke(3));
 		g.draw(radius);
 
 		double endX = Math.sin(heading) * getDistanceTravelled();
