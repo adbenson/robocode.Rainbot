@@ -13,12 +13,12 @@ public class OpponentState extends BotState<OpponentState> {
 	public final double absoluteBearing;
 	public final double distance;
 	
-	public OpponentState(OpponentState previous, OpponentState current, boolean add) {
-		super(previous, current, add);
+	public OpponentState(OpponentState a, OpponentState b, boolean add) {
+		super(a, b, add);
 		
-		this.bearing = previous.bearing + (add? current.bearing : -current.bearing);
-		this.absoluteBearing = previous.absoluteBearing + (add? current.absoluteBearing : -current.absoluteBearing);
-		this.distance = previous.distance + (add? current.distance : -current.distance);
+		this.bearing = a.bearing + (add? b.bearing : -b.bearing);
+		this.absoluteBearing = a.absoluteBearing + (add? b.absoluteBearing : -b.absoluteBearing);
+		this.distance = a.distance + (add? b.distance : -b.distance);
 	}
 
 	public OpponentState(ScannedRobotEvent event, AdvancedRobot self) {
@@ -49,13 +49,13 @@ public class OpponentState extends BotState<OpponentState> {
 	}
 
 	@Override
-	public OpponentState diff(OpponentState previous) {
-		return new OpponentState(previous, this, false);
+	public OpponentState diff(OpponentState b) {
+		return new OpponentState(this, b, false);
 	}
 	
 	@Override
-	public OpponentState sum(OpponentState previous) {
-		return new OpponentState(previous, this, true);
+	public OpponentState sum(OpponentState b) {
+		return new OpponentState(this, b, true);
 	}
 	
 	private static double absoluteBearing(AdvancedRobot self, ScannedRobotEvent current) {

@@ -14,16 +14,11 @@ public class SelfState extends BotState<SelfState> {
 	public final double gunHeading;
 	public final double gunHeat;
 
-	/**
-	 * Differential constructor - only to be used interally for generating change objects.
-	 * @param previous
-	 * @param current
-	 */
-	protected SelfState(SelfState previous, SelfState current, boolean add) {
-		super(previous, current, add);
+	protected SelfState(SelfState a, SelfState b, boolean add) {
+		super(a, b, add);
 		
-		this.gunHeading = previous.gunHeading + (add? current.gunHeading : -current.gunHeading);
-		this.gunHeat = previous.gunHeat + (add? current.gunHeat : -current.gunHeat);
+		this.gunHeading = a.gunHeading + (add? b.gunHeading : -b.gunHeading);
+		this.gunHeat = a.gunHeat + (add? b.gunHeat : -b.gunHeat);
 	}
 	
 	public SelfState(AdvancedRobot self) {
@@ -37,13 +32,13 @@ public class SelfState extends BotState<SelfState> {
 	}
 
 	@Override
-	public SelfState diff(SelfState previous) {
-		return new SelfState(previous, this, false);
+	public SelfState diff(SelfState b) {
+		return new SelfState(this, b, false);
 	}
 	
 	@Override
-	public SelfState sum(SelfState other) {
-		return new SelfState(other, this, true);
+	public SelfState sum(SelfState b) {
+		return new SelfState(b, this, true);
 	}
 
 	public void draw(Graphics2D g) {
