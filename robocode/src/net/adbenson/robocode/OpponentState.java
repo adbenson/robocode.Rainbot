@@ -7,55 +7,50 @@ public class OpponentState extends BotState<OpponentState> {
 	
 	final double bearing;
 	final double distance;
+	
+	public OpponentState(OpponentState previous, OpponentState current) {
+		super(
+			current.name + "_DIFF",
+			previous.energy - current.energy,
+			previous.heading - current.heading,
+			previous.velocity - current.velocity,
+			previous.position.subtract(current.position),
+			null
+		);
+		
+		this.bearing = current.bearing - previous.bearing;
+		this.distance = current.distance - previous.distance;
+	}
 
 	public OpponentState(ScannedRobotEvent event, AdvancedRobot self) {
 		this(event, null, self);
 	}
 
-	public OpponentState(ScannedRobotEvent current, OpponentState previous, AdvancedRobot self) {
-		this(current.getName(), current.getEnergy(), current.getHeading(), current.getVelocity(), 
-				current.getBearingRadians(), current.getDistance(), previous, self);
+	public OpponentState(ScannedRobotEvent current, OpponentState previous, AdvancedRobot self) {		
+		super(
+				current.getName(),
+				current.getEnergy(),
+				current.getHeadingRadians(),
+				current.getVelocity(),
+				calculatePosition(current, self), 
+				previous
+		);
+		
+		this.bearing = current.getBearingRadians();
+		this.distance = current.getDistance();
 	}	
 
-	public OpponentState(String name, double energy, double heading, double velocity, 
-			double bearing, double distance, OpponentState previous, AdvancedRobot self) {
-		super(name, energy, heading, velocity, previous);
+	private static Vector calculatePosition(ScannedRobotEvent current, AdvancedRobot self) {
+		double absoluteBearing = self.getHeading() + current.getBearingRadians();
 		
-		this.bearing = bearing;
-		this.distance = distance;
-		
-		if (previous != null) {
-			this.setPosition(calculatePosition(self));
-		}
-	}
-
-	private Vector calculatePosition(AdvancedRobot self) {
-		double absoluteBearing = self.getHeading() + this.bearing;
-		
-		Vector relative = Vector.getVectorFromAngle(absoluteBearing, distance);
+		Vector relative = Vector.getVectorFromAngle(absoluteBearing, current.getDistance());
 
 		return relative.add(new Vector(self.getX(), self.getY()));
 	}
 
-
 	@Override
 	public OpponentState diff(OpponentState previous) {
-		OpponentState diff = new OpponentState(
-				this.name + "_DIFF",
-				previous.energy - this.energy,
-				previous.heading - this.heading,
-				previous.velocity - this.velocity,
-				previous.bearing - this.bearing,
-				previous.velocity - this.velocity,
-				null,
-				null
-			);
-		
-		if (previous != null) {
-			diff.setPosition(previous.position.subtract(this.position));
-		}
-		
-		return diff;
+		return new OpponentState(previous, this);
 	}
 
 }
