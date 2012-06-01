@@ -3,9 +3,11 @@ package net.adbenson.utility;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-@SuppressWarnings("serial")
-public class Vector extends Point2D.Double {
+public class Vector {
 		
+	public final double x;
+	public final double y;
+	
 	static final double FULL_CIRCLE = 2 * Math.PI;
 	
 	public Vector() {
@@ -34,7 +36,7 @@ public class Vector extends Point2D.Double {
 	}
 	
 	public double magnitude() {
-		return this.distance(0, 0);
+		return new Point2D.Double(x, y).distance(0, 0);
 	}
 
 	public Vector(double x, double y) {
