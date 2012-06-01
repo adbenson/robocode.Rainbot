@@ -12,7 +12,7 @@ public class OpponentBullet extends Bullet {
 	private Ellipse2D radius;
 
 	public OpponentBullet(OpponentState opponent, long time) {
-		super(opponent, opponent.absoluteBearing, time);
+		super(opponent, oppositeAngle(opponent.absoluteBearing), time);
 	}
 
 	public Ellipse2D getBulletRadius() {
@@ -44,5 +44,7 @@ public class OpponentBullet extends Bullet {
 		this.radius = new Ellipse2D.Double(origin.x - radius, origin.y - radius, radius*2, radius*2);
 	}
 
-
+	public static double oppositeAngle(double angle) {
+		return (angle - Math.PI) % Math.PI * 2;
+	}
 }
