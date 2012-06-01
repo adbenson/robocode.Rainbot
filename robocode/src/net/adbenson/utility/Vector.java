@@ -1,5 +1,6 @@
 package net.adbenson.utility;
 
+import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
@@ -89,6 +90,15 @@ public class Vector {
 
 	public Point2D toPoint() {
 		return new Point2D.Double(x, y);
+	}
+	
+	public void drawTo(Graphics2D g, double angle, double length) {
+		Vector end = this.project(angle, length);
+		g.drawLine(intX(), intY(), end.intX(), end.intY());
+	}
+	
+	public Vector project(double angle, double length) {
+		return this.add(getVectorFromAngle(angle, length));
 	}
 
 }
