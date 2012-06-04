@@ -20,6 +20,7 @@ public abstract class BotState<T extends BotState<T>> {
 	public final int index;
 	
 	public final T previous;
+	private T next;
 	public final T change;
 	
 	protected BotState(String name, double energy, double heading, double velocity, Vector position, T previous) {
@@ -36,8 +37,11 @@ public abstract class BotState<T extends BotState<T>> {
 		}
 		else {
 			change = this.diff(previous);
+			((BotState<T>)previous).next = (T) this;
 			index = previous.index + 1;
 		}
+		
+		next = null;
 	}
 	
 	protected <U extends BotState<U>>BotState(U a, U b, boolean add) {
@@ -81,6 +85,10 @@ public abstract class BotState<T extends BotState<T>> {
 	
 	public Vector getPosition() {
 		return position;
+	}
+	
+	public T getNext() {
+		return next;
 	}
 	
 	public abstract T diff(T state);
