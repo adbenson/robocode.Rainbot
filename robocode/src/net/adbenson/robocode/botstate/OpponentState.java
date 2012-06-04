@@ -93,5 +93,8 @@ public class OpponentState extends BotState<OpponentState> {
 		
 		position.drawTo(g, Utility.oppositeAngle(absoluteBearing), distance / 2);
 	}
+	
+	@SuppressWarnings("serial")
+	public class PredictiveStateUnavailableException extends Exception {}
 
 }
