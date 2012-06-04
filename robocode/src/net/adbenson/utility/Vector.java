@@ -22,7 +22,7 @@ public class Vector {
 
 	public double getAngle() {
 		Vector normal = this.normalize();
-		double angle = (FULL_CIRCLE - Math.atan2(normal.x, normal.y));				
+		double angle = Math.atan2(normal.x, normal.y);				
 		return angle;
 	}
 
