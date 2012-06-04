@@ -1,5 +1,7 @@
 package net.adbenson.robocode.botstate;
 
+import java.util.LinkedList;
+
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
@@ -136,6 +138,51 @@ public abstract class BotState<T extends BotState<T>> {
 		}
 		
 		return changeSum;
+	}
+	
+	private T previous(int n) {
+		if (n <= 1 || previous == null) {
+			return previous;
+		}
+		else {
+			return previous(n-1); 
+		}
+	}
+	
+	public T matchStateSequence(LinkedList<T> sequence) {		
+		LinkedList<T>matchSequence = new LinkedList<T>();
+		
+		T candidateState = this.previous;
+		T bestMatch = candidateState;
+		double bestMatchDifference = Double.POSITIVE_INFINITY;
+		
+		testCandidates:
+		while(candidateState != null) {
+			
+			double thisMatchDifference = 0;
+			T testState = candidateState;
+			
+			for(T state : sequence) {
+				if (testState == null || testState.change == null){
+					//We must be reaching the earliest state data
+					break testCandidates;
+				}
+				
+				thisMatchDifference += Math.abs(
+						testState.change.heading - state.change.heading);
+				
+				testState = testState.previous;
+			}
+			
+			if (thisMatchDifference < bestMatchDifference) {
+				bestMatch = candidateState;
+				bestMatchDifference = thisMatchDifference;
+			}
+			
+			candidateState = candidateState.previous;
+		}
+		
+		return bestMatch;
 	}
 
 }
