@@ -100,8 +100,8 @@ public class Rainbot extends AdvancedRobot {
 	    	Vector projection = getPosition().project(getHeadingRadians(), getVelocity());
 	    	
 	    	if (!history.isEmpty()) {
-	    	OpponentState last5 = history.getCurrentOpponent().changeOverTurns(5);
-System.out.println(last5.heading);	 
+	    		OpponentState last5 = history.getCurrentOpponent().changeOverTurns(5);
+	    		System.out.println(history.getCurrentOpponent().velocity);
 	    	}
 	    	
 //			setAhead(Double.POSITIVE_INFINITY * preferredDirection);
@@ -115,7 +115,7 @@ System.out.println(last5.heading);
 	
 	private void faceOpponent() {
     	if (!history.isEmpty()) {
-    		OpponentState o = history.getCurrentState().opponent;
+    		OpponentState o = history.getCurrentOpponent();
     		double offFace = o.bearing;
     		//We don't care which direction we face, so treat either direction the same.
     		if (offFace < 0) {
@@ -146,7 +146,7 @@ System.out.println(last5.heading);
 				!status.collidedWithOpponent) {
 		
 			//Find the opponent's position on the field
-			OpponentState opponent = history.getCurrentState().opponent;
+			OpponentState opponent = history.getCurrentOpponent();
 			Vector opponentPos = opponent.getPosition();
 
 			//Eliminate the possibility of wall crash
@@ -160,8 +160,6 @@ System.out.println(last5.heading);
 System.out.println(preferredDirection);				
 			}
 		}
-		
-
 		
 	}
 
@@ -177,8 +175,8 @@ System.out.println(preferredDirection);
 	public void onScannedRobot(ScannedRobotEvent e) {
 		history.addBots(this, e, getTime());
 		
-		if (history.getCurrentState().opponent.change != null) {
-			status.opponentEnergyDrop = history.getCurrentState().opponent.change.energy <= -Rules.MIN_BULLET_POWER;
+		if (history.getCurrentOpponent().change != null) {
+			status.opponentEnergyDrop = history.getCurrentOpponent().change.energy <= -Rules.MIN_BULLET_POWER;
 		}
 		
 		maintainRadarLock(e);
