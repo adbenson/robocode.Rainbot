@@ -1,6 +1,9 @@
 package net.adbenson.robocode.botstate;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.util.LinkedList;
+import java.util.List;
 
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
@@ -83,6 +86,16 @@ public class OpponentState extends BotState<OpponentState> {
 	
 	private static double absoluteBearing(AdvancedRobot self, ScannedRobotEvent current) {
 		return self.getHeadingRadians() + current.getBearingRadians();
+	}
+	
+	public void drawPath(Graphics2D g) {
+		g.setStroke(new BasicStroke(1));
+		
+		g.setColor(Color.green);
+		position.drawTo(g, heading, velocity * 5);
+		
+		g.setColor(Color.red);		
+		g.fillOval(position.intX(), position.intY(), 3, 3);
 	}
 
 	public void draw(Graphics2D g) {
