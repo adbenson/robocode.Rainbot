@@ -1,6 +1,7 @@
 package net.adbenson.robocode.botstate;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
@@ -9,11 +10,14 @@ import robocode.ScannedRobotEvent;
 
 public abstract class BotState<T extends BotState<T>> {
 	
+	public static final double PREDICTIVE_MATCH_SHORTCUT_THRESHOLD = 0.0001;
+	
 	public final String name;
 	public final double energy;
 	public final double heading;
 	public final double velocity;
 	public final Vector position;
+	public final int index;
 	
 	public final T previous;
 	public final T change;
@@ -28,9 +32,11 @@ public abstract class BotState<T extends BotState<T>> {
 		this.previous = previous;
 		if (previous == null) {
 			change = null;
+			index = 0;
 		}
 		else {
 			change = this.diff(previous);
+			index = previous.index + 1;
 		}
 	}
 	
@@ -140,49 +146,149 @@ public abstract class BotState<T extends BotState<T>> {
 		return changeSum;
 	}
 	
-	private T previous(int n) {
+	public T previousState(int n) {
 		if (n <= 1 || previous == null) {
 			return previous;
 		}
 		else {
-			return previous(n-1); 
+			return previous.previousState(n-1); 
 		}
 	}
 	
-	public T matchStateSequence(LinkedList<T> sequence) {		
-		LinkedList<T>matchSequence = new LinkedList<T>();
+	public List<T> previousSubset(int n, int offset) {
+		T state = previousState(offset);
+		LinkedList<T> subset = new LinkedList<T>();
 		
-		T candidateState = this.previous;
-		T bestMatch = candidateState;
-		double bestMatchDifference = Double.POSITIVE_INFINITY;
-		
-		testCandidates:
-		while(candidateState != null) {
-			
-			double thisMatchDifference = 0;
-			T testState = candidateState;
-			
-			for(T state : sequence) {
-				if (testState == null || testState.change == null){
-					//We must be reaching the earliest state data
-					break testCandidates;
-				}
-				
-				thisMatchDifference += Math.abs(
-						testState.change.heading - state.change.heading);
-				
-				testState = testState.previous;
+		for(int i = 1; i <= n; i++) {
+			if (state == null || state.previous == null) {
+				break;
 			}
-			
-			if (thisMatchDifference < bestMatchDifference) {
-				bestMatch = candidateState;
-				bestMatchDifference = thisMatchDifference;
-			}
-			
-			candidateState = candidateState.previous;
+			subset.add(state.previous);			
+			state = state.previous;
 		}
 		
+		return subset;
+	}
+	
+	public T matchStateSequence(int turnsToMatch, StateMatchComparator<T> compare) {
+		//Initialize the first reference state
+		T reference = this.previous;
+		//Find the first match candidate
+		T test = previousState(turnsToMatch);
+		
+		//Initialize the bestMatch and best comparison
+		T bestMatch = null;
+		double bestMatchDifference = Integer.MAX_VALUE;
+		
+		//Start looping through test states
+		testStates:
+		while(test != null) {
+			//Compare the test states to the reference states
+			double difference;
+			try {
+				difference = compareStates(reference, test, turnsToMatch, compare);
+			} catch (StateComparisonUnavailableException e) {
+				System.out.println("Reached earliest state");
+				break testStates;
+			}
+					
+			//See if this match is better
+			if (difference < bestMatchDifference) {
+				bestMatch = test;
+				bestMatchDifference = difference;		
+			}
+						
+			System.out.println("Best predictive match: "+bestMatchDifference);
+			
+			if (difference <= PREDICTIVE_MATCH_SHORTCUT_THRESHOLD) {
+				System.out.println("Prediction threshold met. Shortcutting.");
+				break testStates;
+			}
+			
+			test = test.previous;
+		}
+		
+
+		
+		//Return the best match found
 		return bestMatch;
+	}
+	
+	public double compareStates(T reference, T test, int nStates, StateMatchComparator<T> compare) throws StateComparisonUnavailableException {
+		double difference = 0;
+		
+		for(int i = 0; i < nStates; i++) {
+			if (reference == null || test == null) {
+				throw new StateComparisonUnavailableException();
+			}
+			
+			difference += Math.abs(compare.compare(reference, test));
+			
+			reference = reference.previous;
+			test = test.previous;
+		}
+
+		return difference;
+	}
+	
+//	public T matchStateSequence(int turnsToMatch) {
+//		//The state we're going to test back from
+//		T candidateState = this.previousState(turnsToMatch);
+//		//should eventually be state whose history best matches the given sequence
+//		T bestMatchState = candidateState;
+//		//The similarity factor between the given sequence and the candidate history
+//		double bestMatchDifference = Double.POSITIVE_INFINITY;
+//		
+//		//Loop through every state previous to this one
+//		testCandidates:
+//		while(candidateState != null) {
+//			
+//			//Initialize this round
+//			double testMatchDifference = 0;
+//			T testMatchState = candidateState;
+//			
+//			T compareState = this.previous;
+//			
+//			for(int i = 0; i < turnsToMatch; i++) {
+//				if (testMatchState == null || testMatchState.change == null){
+//System.out.println("Finished testing");
+//					//We must be reaching the earliest state data, stop testing.
+//					//As soon as there are too few prior states to test, results are inconclusive.
+//					break testCandidates;
+//				}
+//				
+//
+//				if (state == null || state.change == null) {
+//					System.err.println("Null state or state with no history passed to matchStateSequence");
+//					return null;
+//				}
+//				
+//				//TODO make the test criteria more variable
+//				testMatchDifference += Math.abs(
+//						testMatchState.change.heading - state.change.heading);
+////System.out.println("Diff:"+testMatchDifference);				
+//				testMatchState = testMatchState.previous;
+//			}
+//			
+//			//See if we've found a better match
+//			if (testMatchDifference < bestMatchDifference) {
+//System.out.println("Better match found. Difference: "+testMatchDifference);				
+//				bestMatchState = candidateState;
+//				bestMatchDifference = testMatchDifference;
+//			}
+//			
+//			candidateState = candidateState.previous;
+//		}
+//		
+//		return bestMatchState;
+//	}
+	
+	public static class StateComparisonUnavailableException extends Exception {
+		
+	}
+	
+	public interface StateMatchComparator<U extends BotState<U>> {
+		public double compare(U test, U reference) throws StateComparisonUnavailableException;
 	}
 
 }
