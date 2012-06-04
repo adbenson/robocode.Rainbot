@@ -101,4 +101,11 @@ public class Vector {
 		return this.add(getVectorFromAngle(angle, length));
 	}
 
+	public double distance(Vector position) {
+		double xDiff = position.x - this.x;
+		double yDiff = position.y - this.y;
+		
+		return Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
+	}
+
 }
