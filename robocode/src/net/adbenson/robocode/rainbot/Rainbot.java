@@ -9,11 +9,13 @@ import net.adbenson.robocode.botstate.BattleHistory;
 import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
+import net.adbenson.robocode.bullet.Bullet;
 import net.adbenson.robocode.trigger.Trigger;
 import net.adbenson.robocode.trigger.TriggerSet;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
+import robocode.BattleRules;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletHitEvent;
 import robocode.BulletMissedEvent;
@@ -50,10 +52,15 @@ public class Rainbot extends AdvancedRobot {
 	private Rectangle2D safety;
 	private double preferredDistance;
 	
-	private static final int PREDICTIVE_LOOKBEHIND = 100;
+	public static final int PREDICTIVE_LOOKBEHIND = 30;
 	private StateMatchComparator<OpponentState> predictiveComparator;
 	
 	private List<OpponentState> opponentPrediction;
+	
+	private OpponentState optimalTarget;
+	
+	private boolean ready;
+	private boolean aim;
 	
 	public Rainbot() {
 		super();
@@ -71,6 +78,9 @@ public class Rainbot extends AdvancedRobot {
 		preferredDirection = -1;
 		
 		predictiveComparator = new HeadingVelocityStateComparator();
+		
+		ready = false;
+		aim = false;
 	}
 	
 	public void run() {
@@ -108,24 +118,44 @@ public class Rainbot extends AdvancedRobot {
 	    	history.getSelfBullets().updateAll(getTime());
 	    	history.getOpponentBullets().updateAll(getTime());
 	    	
+//			double velocityTrend = Math.abs(o.previous.change.velocity - o.change.velocity);
+//			double headingTrend = Math.abs(o.previous.change.heading - o.change.heading);
+	    	
 	    	if (history.size() > PREDICTIVE_LOOKBEHIND) {
-	    		OpponentState o = history.getCurrentOpponent();
-	    		
-	    		long start = System.nanoTime();
-	    		
-	    		OpponentState bestMatch = o.matchStateSequence(PREDICTIVE_LOOKBEHIND, predictiveComparator);
-	    		
-	    		if (bestMatch != null) {
-		    		try {
-						opponentPrediction = o.predictStates(bestMatch, PREDICTIVE_LOOKBEHIND);
-					} catch (PredictiveStateUnavailableException e) {
-						System.out.println("Prediction failed due to unavailable data");
-					}
+//	    		if (velocityTrend < 0.01 && headingTrend < 0.01 && o.change.heading < 0.01) {
+
+		    	//ONLY look into prediction if we're not preparing to fire or have just fired 
+	    		if (!ready && this.getGunHeat() <= getGunCoolingRate()) {
+		    		opponentPrediction = predictTheFuture();
+	    			
+		    		ready = false;
+	    			aim = false;
+		    		
+		    		if (opponentPrediction != null) {
+		    			
+						try {
+							double predictedBearing = getBearingFromPrediction(opponentPrediction, 1);
+							
+			    			this.setTurnGunRightRadians(
+			    					Utility.angleDifference(predictedBearing, this.getGunHeadingRadians()));
+			    			
+			    			ready = true;
+						} catch (UnableToTargetPredictionException e) {
+							System.out.println("Predicted target unreachable");
+						}
+		    		}
 	    		}
-	    		
-	    		System.out.print("time:");
-	    		System.out.format("%,8d", System.nanoTime() - start);
-	    		System.out.println(" ("+getTime()+")");
+		    	
+		    	if (ready && this.getGunTurnRemainingRadians() <= Rules.GUN_TURN_RATE_RADIANS) {	    		
+		    		aim = true;
+		    	}
+		    	
+		    	if (ready && aim) {
+		    		setFire(1);   		
+		    		ready = false;
+		    		aim = false;
+		    	}
+	    	
 	    	}
 		       	
 	    	//Reset all statuses so they will be "clean" for the next round of events
@@ -133,6 +163,57 @@ public class Rainbot extends AdvancedRobot {
 	    	execute();
 
 	    } while (true);
+	}
+	
+	private double getBearingFromPrediction(List<OpponentState> prediction, double firePower) throws UnableToTargetPredictionException {
+		Vector position = getPosition();
+		double bulletVelocity = Bullet.getVelocity(firePower);
+				
+		int turnsToPosition = 0;
+		
+		for(OpponentState target : prediction) {
+			turnsToPosition++;
+			
+			double distance = target.position.distance(position);
+			double bulletTravel = bulletVelocity * turnsToPosition;
+//System.out.println("d:"+distance+" bt:"+bulletTravel);
+			if (distance < bulletTravel) {
+				optimalTarget = target;
+				break;
+			}
+		}
+		
+		if (optimalTarget == null) {
+			throw new UnableToTargetPredictionException();
+		}
+		
+//		double bearing = position.subtract(optimalTarget.position).getAngle();
+		Vector offset = optimalTarget.position.subtract(position);
+		double bearing = offset.getAngle();
+System.out.println(offset);
+		return bearing;
+	}
+
+	private List<OpponentState> predictTheFuture() {
+		OpponentState o = history.getCurrentOpponent();
+		List<OpponentState> prediction = null;
+
+		long start = System.nanoTime();
+		
+		OpponentState bestMatch = o.matchStateSequence(PREDICTIVE_LOOKBEHIND, predictiveComparator);
+		
+		if (bestMatch != null) {
+    		try {
+    			prediction = o.predictStates(bestMatch, PREDICTIVE_LOOKBEHIND);
+			} catch (PredictiveStateUnavailableException e) {
+				System.out.println("Prediction failed due to unavailable data");
+			}
+		}
+		
+		System.out.print("time:"); System.out.format("%,8d", System.nanoTime() - start);
+		System.out.println(" ("+getTime()+")");
+
+		return prediction;
 	}
 	
 	private void faceOpponent() {
@@ -233,9 +314,15 @@ public class Rainbot extends AdvancedRobot {
 		}
 		
 		if (opponentPrediction != null) { 
-			for(OpponentState os : opponentPrediction) {
-				os.drawPath(g);
+			for(int i=0; i<opponentPrediction.size(); i++) {
+				opponentPrediction.get(i).drawPath(g, i);
 			}
+		}
+		
+		if (optimalTarget != null) {
+			g.setStroke(new BasicStroke(2));
+			g.setColor(Color.orange);
+			Utility.drawCrosshairs(g, optimalTarget.position, 5, 40);
 		}
 	}
 	
@@ -331,5 +418,6 @@ public class Rainbot extends AdvancedRobot {
 		}
 	}
 
+	private class UnableToTargetPredictionException extends Exception {}
 	
 }
