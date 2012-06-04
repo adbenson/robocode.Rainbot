@@ -107,5 +107,9 @@ public class Vector {
 		
 		return Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
 	}
+	
+	public String toString() {
+		return "Vector: ("+x+", "+y+") ["+hashCode()+"]";
+	}
 
 }
