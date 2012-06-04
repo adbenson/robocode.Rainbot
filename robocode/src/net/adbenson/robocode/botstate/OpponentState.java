@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.util.LinkedList;
 import java.util.List;
 
+import net.adbenson.robocode.rainbot.Rainbot;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
@@ -67,7 +68,8 @@ public class OpponentState extends BotState<OpponentState> {
 	
 	public List<OpponentState> predictStates(OpponentState basis, int nTurns) throws PredictiveStateUnavailableException{
 		List<OpponentState> nextStates = new LinkedList<OpponentState>();
-		OpponentState nextBasis = basis;
+		//Start with basis.next because basis matches the current state
+		OpponentState nextBasis = basis.getNext();
 		OpponentState nextState = this;
 		
 		for(int i = 0; i < nTurns; i++) {
@@ -79,7 +81,7 @@ public class OpponentState extends BotState<OpponentState> {
 			double newVelocity = nextState.velocity + nextBasis.change.velocity;
 			
 			Vector newPosition = nextState.position.add(Vector.getVectorFromAngle(newHeading, newVelocity));
-			
+						
 //			String name, double energy, double heading, double velocity, 
 //			Vector position, OpponentState previous, 
 //			double bearing, double absoluteBearing, double distance
@@ -110,13 +112,14 @@ public class OpponentState extends BotState<OpponentState> {
 		return self.getHeadingRadians() + current.getBearingRadians();
 	}
 	
-	public void drawPath(Graphics2D g) {
+	public void drawPath(Graphics2D g, int index) {
 		g.setStroke(new BasicStroke(1));
 		
 		g.setColor(Color.green);
 		position.drawTo(g, heading, velocity * 5);
 		
-		g.setColor(Color.red);		
+		float ratio = (float)index / Rainbot.PREDICTIVE_LOOKBEHIND;
+		g.setColor(Color.getHSBColor(ratio, 1f, 1f));		
 		g.fillOval(position.intX(), position.intY(), 3, 3);
 	}
 
