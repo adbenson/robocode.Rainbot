@@ -109,16 +109,15 @@ public class Rainbot extends AdvancedRobot {
 	    	if (history.size() > PREDICTIVE_LOOKBEHIND) {
 	    		OpponentState o = history.getCurrentOpponent();
 	    		
-	    		
 	    		long start = System.nanoTime();
 	    		
 	    		OpponentState bestMatch = o.matchStateSequence(PREDICTIVE_LOOKBEHIND, predictiveComparator);
 	    		
+	    		
+	    		
 	    		System.out.print("time:");
 	    		System.out.format("%,8d", System.nanoTime() - start);
-	    		System.out.println(" ("+history.size()+")");
-
-
+	    		System.out.println(" ("+getTime()+")");
 	    	}
 		       	
 	    	//Reset all statuses so they will be "clean" for the next round of events
