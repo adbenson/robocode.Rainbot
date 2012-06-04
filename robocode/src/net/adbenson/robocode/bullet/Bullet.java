@@ -35,8 +35,12 @@ public abstract class Bullet {
 	}
 
 	private double velocity() {
-        return (20.0 - (3.0 * power));
+        return getVelocity(power);
     }
+	
+	public static double getVelocity(double power) {
+		return (20.0 - (3.0 * power));
+	}
     
     public double getDistanceTravelled() {
     	return distanceTravelled;
