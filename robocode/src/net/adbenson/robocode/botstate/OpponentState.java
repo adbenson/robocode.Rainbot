@@ -51,6 +51,25 @@ public class OpponentState extends BotState<OpponentState> {
 
 		return relative.add(new Vector(self.getX(), self.getY()));
 	}
+	
+	public List<OpponentState> predictStates(OpponentState basis, int nTurns) throws PredictiveStateUnavailableException{
+		List<OpponentState> nextStates = new LinkedList<OpponentState>();
+		OpponentState nextBasis = basis;
+		OpponentState nextState = this;
+		
+		for(int i = 0; i < nTurns; i++) {
+			if (nextBasis == null || nextBasis.change == null) {
+				throw new PredictiveStateUnavailableException();
+			}
+			
+			nextState = new OpponentState(nextBasis.change, nextState, true);
+			nextStates.add(nextState);
+			
+			nextBasis = basis.getNext();
+		}
+		
+		return nextStates;
+	}
 
 	@Override
 	public OpponentState diff(OpponentState b) {
