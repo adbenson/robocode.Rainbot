@@ -3,12 +3,12 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-import java.util.Comparator;
+import java.util.List;
 
 import net.adbenson.robocode.botstate.BattleHistory;
-import net.adbenson.robocode.botstate.BotState.StateComparisonUnavailableException;
 import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState;
+import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
 import net.adbenson.robocode.trigger.Trigger;
 import net.adbenson.robocode.trigger.TriggerSet;
 import net.adbenson.utility.Utility;
@@ -50,8 +50,10 @@ public class Rainbot extends AdvancedRobot {
 	private Rectangle2D safety;
 	private double preferredDistance;
 	
-	private static final int PREDICTIVE_LOOKBEHIND = 30;
+	private static final int PREDICTIVE_LOOKBEHIND = 100;
 	private StateMatchComparator<OpponentState> predictiveComparator;
+	
+	private List<OpponentState> opponentPrediction;
 	
 	public Rainbot() {
 		super();
@@ -113,7 +115,13 @@ public class Rainbot extends AdvancedRobot {
 	    		
 	    		OpponentState bestMatch = o.matchStateSequence(PREDICTIVE_LOOKBEHIND, predictiveComparator);
 	    		
-	    		
+	    		if (bestMatch != null) {
+		    		try {
+						opponentPrediction = o.predictStates(bestMatch, PREDICTIVE_LOOKBEHIND);
+					} catch (PredictiveStateUnavailableException e) {
+						System.out.println("Prediction failed due to unavailable data");
+					}
+	    		}
 	    		
 	    		System.out.print("time:");
 	    		System.out.format("%,8d", System.nanoTime() - start);
@@ -206,12 +214,14 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	public void onPaint(Graphics2D g) {
+		
+//		g.setColor(Color.red);
+//		g.draw(field);
+//		
+//		g.setColor(Color.green);
+//		g.draw(safety);
+		
 		if (!history.isEmpty()) {
-			g.setColor(Color.red);
-			g.draw(field);
-			
-			g.setColor(Color.green);
-			g.draw(safety);
 			
 			g.setStroke(new BasicStroke(3));
 			
@@ -220,6 +230,12 @@ public class Rainbot extends AdvancedRobot {
 			history.getCurrentState().opponent.draw(g);
 			
 			history.getCurrentState().self.draw(g);
+		}
+		
+		if (opponentPrediction != null) { 
+			for(OpponentState os : opponentPrediction) {
+				os.drawPath(g);
+			}
 		}
 	}
 	
