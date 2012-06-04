@@ -239,58 +239,7 @@ public abstract class BotState<T extends BotState<T>> {
 		return difference;
 	}
 	
-//	public T matchStateSequence(int turnsToMatch) {
-//		//The state we're going to test back from
-//		T candidateState = this.previousState(turnsToMatch);
-//		//should eventually be state whose history best matches the given sequence
-//		T bestMatchState = candidateState;
-//		//The similarity factor between the given sequence and the candidate history
-//		double bestMatchDifference = Double.POSITIVE_INFINITY;
-//		
-//		//Loop through every state previous to this one
-//		testCandidates:
-//		while(candidateState != null) {
-//			
-//			//Initialize this round
-//			double testMatchDifference = 0;
-//			T testMatchState = candidateState;
-//			
-//			T compareState = this.previous;
-//			
-//			for(int i = 0; i < turnsToMatch; i++) {
-//				if (testMatchState == null || testMatchState.change == null){
-//System.out.println("Finished testing");
-//					//We must be reaching the earliest state data, stop testing.
-//					//As soon as there are too few prior states to test, results are inconclusive.
-//					break testCandidates;
-//				}
-//				
-//
-//				if (state == null || state.change == null) {
-//					System.err.println("Null state or state with no history passed to matchStateSequence");
-//					return null;
-//				}
-//				
-//				//TODO make the test criteria more variable
-//				testMatchDifference += Math.abs(
-//						testMatchState.change.heading - state.change.heading);
-////System.out.println("Diff:"+testMatchDifference);				
-//				testMatchState = testMatchState.previous;
-//			}
-//			
-//			//See if we've found a better match
-//			if (testMatchDifference < bestMatchDifference) {
-//System.out.println("Better match found. Difference: "+testMatchDifference);				
-//				bestMatchState = candidateState;
-//				bestMatchDifference = testMatchDifference;
-//			}
-//			
-//			candidateState = candidateState.previous;
-//		}
-//		
-//		return bestMatchState;
-//	}
-	
+	@SuppressWarnings("serial")
 	public static class StateComparisonUnavailableException extends Exception {
 		
 	}
