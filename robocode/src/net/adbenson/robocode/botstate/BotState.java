@@ -180,7 +180,7 @@ public abstract class BotState<T extends BotState<T>> {
 	
 	public T matchStateSequence(int turnsToMatch, StateMatchComparator<T> compare) {
 		//Initialize the first reference state
-		T reference = this.previous;
+		T reference = (T) this;
 		//Find the first match candidate
 		T test = previousState(turnsToMatch);
 		
@@ -196,7 +196,7 @@ public abstract class BotState<T extends BotState<T>> {
 			try {
 				difference = compareStates(reference, test, turnsToMatch, compare);
 			} catch (StateComparisonUnavailableException e) {
-				System.out.println("Reached earliest state");
+//				System.out.println("Reached earliest state");
 				break testStates;
 			}
 					
@@ -206,7 +206,7 @@ public abstract class BotState<T extends BotState<T>> {
 				bestMatchDifference = difference;		
 			}
 						
-			System.out.println("Best predictive match: "+bestMatchDifference);
+//			System.out.println("Best predictive match: "+bestMatchDifference);
 			
 			if (difference <= PREDICTIVE_MATCH_SHORTCUT_THRESHOLD) {
 				System.out.println("Prediction threshold met. Shortcutting.");
@@ -215,8 +215,6 @@ public abstract class BotState<T extends BotState<T>> {
 			
 			test = test.previous;
 		}
-		
-
 		
 		//Return the best match found
 		return bestMatch;
