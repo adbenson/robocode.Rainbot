@@ -3,8 +3,11 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Comparator;
 
 import net.adbenson.robocode.botstate.BattleHistory;
+import net.adbenson.robocode.botstate.BotState.StateComparisonUnavailableException;
+import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.trigger.Trigger;
 import net.adbenson.robocode.trigger.TriggerSet;
@@ -47,6 +50,9 @@ public class Rainbot extends AdvancedRobot {
 	private Rectangle2D safety;
 	private double preferredDistance;
 	
+	private static final int PREDICTIVE_LOOKBEHIND = 30;
+	private StateMatchComparator<OpponentState> predictiveComparator;
+	
 	public Rainbot() {
 		super();
 		
@@ -61,6 +67,8 @@ public class Rainbot extends AdvancedRobot {
 		status = new Status();	
 		
 		preferredDirection = -1;
+		
+		predictiveComparator = new HeadingVelocityStateComparator();
 	}
 	
 	public void run() {
@@ -97,15 +105,22 @@ public class Rainbot extends AdvancedRobot {
 	    		    	
 	    	history.getSelfBullets().updateAll(getTime());
 	    	history.getOpponentBullets().updateAll(getTime());
-	    	Vector projection = getPosition().project(getHeadingRadians(), getVelocity());
 	    	
-	    	if (!history.isEmpty()) {
-	    		OpponentState last5 = history.getCurrentOpponent().changeOverTurns(5);
-	    		System.out.println(history.getCurrentOpponent().velocity);
+	    	if (history.size() > PREDICTIVE_LOOKBEHIND) {
+	    		OpponentState o = history.getCurrentOpponent();
+	    		
+	    		
+	    		long start = System.nanoTime();
+	    		
+	    		OpponentState bestMatch = o.matchStateSequence(PREDICTIVE_LOOKBEHIND, predictiveComparator);
+	    		
+	    		System.out.print("time:");
+	    		System.out.format("%,8d", System.nanoTime() - start);
+	    		System.out.println(" ("+history.size()+")");
+
+
 	    	}
-	    	
-//			setAhead(Double.POSITIVE_INFINITY * preferredDirection);
-	       	
+		       	
 	    	//Reset all statuses so they will be "clean" for the next round of events
 	        status.reset();
 	    	execute();
@@ -157,7 +172,7 @@ public class Rainbot extends AdvancedRobot {
 				System.out.println("Opponent fire detected");
 				history.opponentFired();
 				preferredDirection = -preferredDirection;
-System.out.println(preferredDirection);				
+				setAhead(100 * preferredDirection);
 			}
 		}
 		
