@@ -16,6 +16,16 @@ public class OpponentState extends BotState<OpponentState> {
 	public final double absoluteBearing;
 	public final double distance;
 	
+	public OpponentState(
+			String name, double energy, double heading, double velocity, 
+			Vector position, OpponentState previous, 
+			double bearing, double absoluteBearing, double distance) {
+		super(name, energy, heading, velocity, position, previous);
+		this.bearing = bearing;
+		this.absoluteBearing = absoluteBearing;
+		this.distance = distance;
+	}
+	
 	public OpponentState(OpponentState a, OpponentState b, boolean add) {
 		super(a, b, add);
 		
@@ -65,10 +75,22 @@ public class OpponentState extends BotState<OpponentState> {
 				throw new PredictiveStateUnavailableException();
 			}
 			
-			nextState = new OpponentState(nextBasis.change, nextState, true);
+			double newHeading = (nextState.heading + nextBasis.change.heading) % Utility.TWO_PI;
+			double newVelocity = nextState.velocity + nextBasis.change.velocity;
+			
+			Vector newPosition = nextState.position.add(Vector.getVectorFromAngle(newHeading, newVelocity));
+			
+//			String name, double energy, double heading, double velocity, 
+//			Vector position, OpponentState previous, 
+//			double bearing, double absoluteBearing, double distance
+			nextState = new OpponentState(
+					"Prediction", energy, newHeading, newVelocity,
+					newPosition, nextState,
+					0, 0, 0
+			);
 			nextStates.add(nextState);
 			
-			nextBasis = basis.getNext();
+			nextBasis = nextBasis.getNext();	
 		}
 		
 		return nextStates;
