@@ -3,11 +3,15 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import net.adbenson.robocode.botstate.BattleHistory;
-import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState;
+import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
 import net.adbenson.robocode.bullet.Bullet;
 import net.adbenson.robocode.trigger.Trigger;
@@ -15,7 +19,6 @@ import net.adbenson.robocode.trigger.TriggerSet;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
-import robocode.BattleRules;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletHitEvent;
 import robocode.BulletMissedEvent;
@@ -55,12 +58,16 @@ public class Rainbot extends AdvancedRobot {
 	public static final int PREDICTIVE_LOOKBEHIND = 30;
 	private StateMatchComparator<OpponentState> predictiveComparator;
 	
-	private List<OpponentState> opponentPrediction;
+	private LinkedList<OpponentState> opponentPrediction;
 	
-	private OpponentState optimalTarget;
+	private OpponentState candidateTarget;
 	
 	private boolean ready;
 	private boolean aim;
+	
+	private double TARGET_FIREPOWER = 1.5;
+	
+	private double requiredFirepower;
 	
 	public Rainbot() {
 		super();
@@ -134,10 +141,12 @@ public class Rainbot extends AdvancedRobot {
 		    		if (opponentPrediction != null) {
 		    			
 						try {
-							double predictedBearing = getBearingFromPrediction(opponentPrediction, 1);
+							Target target = getBearingFromPrediction(opponentPrediction, TARGET_FIREPOWER);
+							
+							requiredFirepower = target.power;
 							
 			    			this.setTurnGunRightRadians(
-			    					Utility.angleDifference(predictedBearing, this.getGunHeadingRadians()));
+			    					Utility.angleDifference(target.bearing, this.getGunHeadingRadians()));
 			    			
 			    			ready = true;
 						} catch (UnableToTargetPredictionException e) {
@@ -151,7 +160,7 @@ public class Rainbot extends AdvancedRobot {
 		    	}
 		    	
 		    	if (ready && aim) {
-		    		setFire(1);   		
+		    		setFire(requiredFirepower);   		
 		    		ready = false;
 		    		aim = false;
 		    	}
@@ -165,38 +174,48 @@ public class Rainbot extends AdvancedRobot {
 	    } while (true);
 	}
 	
-	private double getBearingFromPrediction(List<OpponentState> prediction, double firePower) throws UnableToTargetPredictionException {
-		Vector position = getPosition();
-		double bulletVelocity = Bullet.getVelocity(firePower);
-				
+	private Target getBearingFromPrediction(LinkedList<OpponentState> prediction, double targetPower) throws UnableToTargetPredictionException {	
+		Vector position = getPosition();						
 		int turnsToPosition = 0;
+		
+		TreeMap<Double, OpponentState> potentialTargets = new TreeMap<Double, OpponentState>();
 		
 		for(OpponentState target : prediction) {
 			turnsToPosition++;
-			
+						
 			double distance = target.position.distance(position);
-			double bulletTravel = bulletVelocity * turnsToPosition;
-//System.out.println("d:"+distance+" bt:"+bulletTravel);
-			if (distance < bulletTravel) {
-				optimalTarget = target;
-				break;
+			double requiredPower = Bullet.getRequiredPower(turnsToPosition, distance);
+			
+			//If the power required is below the minimum, it can't possibly get there in time.
+			if (requiredPower >= Rules.MIN_BULLET_POWER) {
+				potentialTargets.put(requiredPower, target);				
 			}
 		}
 		
-		if (optimalTarget == null) {
+		//If nothing is added to the list, nothing is in range.
+		if (potentialTargets.isEmpty()) {
 			throw new UnableToTargetPredictionException();
 		}
 		
-//		double bearing = position.subtract(optimalTarget.position).getAngle();
-		Vector offset = optimalTarget.position.subtract(position);
-		double bearing = offset.getAngle();
-System.out.println(offset);
-		return bearing;
+		//Get the closest entry with a required power >= targetPower
+		Map.Entry<Double, OpponentState> closestMatch = 
+			potentialTargets.ceilingEntry(targetPower);
+		
+		//If there's none, just take the highest available.
+		if (closestMatch == null) {
+			closestMatch = potentialTargets.lastEntry();
+		}
+		
+		double power = closestMatch.getKey();
+		candidateTarget = closestMatch.getValue();
+		Vector offset = candidateTarget.position.subtract(position);
+		
+		return new Target(power, offset.getAngle());
 	}
 
-	private List<OpponentState> predictTheFuture() {
+	private LinkedList<OpponentState> predictTheFuture() {
 		OpponentState o = history.getCurrentOpponent();
-		List<OpponentState> prediction = null;
+		LinkedList<OpponentState> prediction = null;
 
 		long start = System.nanoTime();
 		
@@ -271,7 +290,7 @@ System.out.println(offset);
 	}
 	
 	public void setFire(double power) {
-		history.selfFired();
+		history.selfFired(candidateTarget);
 		super.setFire(power);
 	}
 	
@@ -307,6 +326,7 @@ System.out.println(offset);
 			g.setStroke(new BasicStroke(3));
 			
 			history.getOpponentBullets().draw(g);
+			history.getSelfBullets().draw(g);
 			
 			history.getCurrentState().opponent.draw(g);
 			
@@ -317,12 +337,6 @@ System.out.println(offset);
 			for(int i=0; i<opponentPrediction.size(); i++) {
 				opponentPrediction.get(i).drawPath(g, i);
 			}
-		}
-		
-		if (optimalTarget != null) {
-			g.setStroke(new BasicStroke(2));
-			g.setColor(Color.orange);
-			Utility.drawCrosshairs(g, optimalTarget.position, 5, 40);
 		}
 	}
 	
@@ -419,5 +433,14 @@ System.out.println(offset);
 	}
 
 	private class UnableToTargetPredictionException extends Exception {}
+	
+	private class Target {
+		public final double power;
+		public final double bearing;
+		public Target(double power, double bearing) {
+			this.power = power;
+			this.bearing = bearing;
+		}
+	}
 	
 }
