@@ -24,6 +24,7 @@ import robocode.CustomEvent;
 import robocode.HitByBulletEvent;
 import robocode.HitRobotEvent;
 import robocode.HitWallEvent;
+import robocode.RobotDeathEvent;
 import robocode.Rules;
 import robocode.ScannedRobotEvent;
 import robocode.util.Utils;
@@ -53,19 +54,16 @@ public class Rainbot extends AdvancedRobot {
 	private Rectangle2D safety;
 	private double preferredDistance;
 	
-	public static final int PREDICTIVE_LOOKBEHIND = 30;
+	public static final int PREDICTIVE_LOOKBEHIND = 100;
 	private StateMatchComparator<OpponentState> predictiveComparator;
 	
 	private LinkedList<OpponentState> opponentPrediction;
 	
 	private OpponentState candidateTarget;
 	
-	private boolean ready;
-	private boolean aim;
+	private double TARGET_FIREPOWER = 3;
 	
-	private double TARGET_FIREPOWER = 1.5;
-	
-	private double requiredFirepower;
+	private boolean opponentAlive;
 	
 	public Rainbot() {
 		super();
@@ -84,8 +82,6 @@ public class Rainbot extends AdvancedRobot {
 		
 		predictiveComparator = new HeadingVelocityStateComparator();
 		
-		ready = false;
-		aim = false;
 	}
 	
 	public void run() {
@@ -100,6 +96,8 @@ public class Rainbot extends AdvancedRobot {
 				getBattleFieldWidth()-(botSize.x*2), getBattleFieldHeight()-(botSize.y*2)
 		);
 		
+		opponentAlive = true;
+		
 		preferredDistance = new Vector(field).magnitude() / 2;
 		
 		setAdjustGunForRobotTurn(true);
@@ -111,6 +109,11 @@ public class Rainbot extends AdvancedRobot {
 	    triggers.addTo(this);
 	    
 	    startRadarLock();
+	    
+	    double requiredFirepower = 0;
+		boolean ready = false;
+		boolean aim = false;
+		boolean fire = false;
 	    
 	    do {
 	    	hueShift();
@@ -128,13 +131,26 @@ public class Rainbot extends AdvancedRobot {
 	    	
 	    	if (history.size() > PREDICTIVE_LOOKBEHIND) {
 //	    		if (velocityTrend < 0.01 && headingTrend < 0.01 && o.change.heading < 0.01) {
+	    		
+		    	if (ready && Math.abs(this.getGunTurnRemainingRadians()) < Rules.GUN_TURN_RATE_RADIANS) {	    		
+		    		aim = true;
+		    		fire = false;
+		    	}
+	    		
+		    	if (opponentAlive && ready && aim && !fire) {
+		    		setFire(requiredFirepower);   		
+		    		ready = false;
+		    		aim = false;
+		    		fire = true;
+		    	}
+
 
 		    	//ONLY look into prediction if we're not preparing to fire or have just fired 
 	    		if (!ready && this.getGunHeat() <= getGunCoolingRate()) {
 		    		opponentPrediction = predictTheFuture();
-	    			
-		    		ready = false;
+		    		
 	    			aim = false;
+	    			fire = false;
 		    		
 		    		if (opponentPrediction != null) {
 		    			
@@ -147,21 +163,13 @@ public class Rainbot extends AdvancedRobot {
 			    					Utility.angleDifference(target.bearing, this.getGunHeadingRadians()));
 			    			
 			    			ready = true;
+			    			
 						} catch (UnableToTargetPredictionException e) {
 							System.out.println("Predicted target unreachable");
 						}
 		    		}
-	    		}
-		    	
-		    	if (ready && this.getGunTurnRemainingRadians() <= Rules.GUN_TURN_RATE_RADIANS) {	    		
-		    		aim = true;
-		    	}
-		    	
-		    	if (ready && aim) {
-		    		setFire(requiredFirepower);   		
-		    		ready = false;
-		    		aim = false;
-		    	}
+	    		}   	
+
 	    	
 	    	}
 		       	
@@ -183,9 +191,9 @@ public class Rainbot extends AdvancedRobot {
 						
 			double distance = target.position.distance(position);
 			double requiredPower = Bullet.getRequiredPower(turnsToPosition, distance);
-			
+		
 			//If the power required is below the minimum, it can't possibly get there in time.
-			if (requiredPower >= Rules.MIN_BULLET_POWER) {
+			if (requiredPower >= Rules.MIN_BULLET_POWER && requiredPower <= Rules.MAX_BULLET_POWER) {
 				potentialTargets.put(requiredPower, target);				
 			}
 		}
@@ -288,8 +296,9 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	public void setFire(double power) {
-		history.selfFired(candidateTarget);
-		super.setFire(power);
+System.out.println("Firing@"+power);		
+		robocode.Bullet bullet = super.setFireBullet(power);
+		history.selfFired(candidateTarget, bullet);
 	}
 	
 	public void onScannedRobot(ScannedRobotEvent e) {
@@ -300,6 +309,10 @@ public class Rainbot extends AdvancedRobot {
 		}
 		
 		maintainRadarLock(e);
+	}
+	
+	public void onRobotDeath(RobotDeathEvent event) {
+		opponentAlive = false;
 	}
 	
 	private void startRadarLock() {
