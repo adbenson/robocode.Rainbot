@@ -114,7 +114,7 @@ public class OpponentState extends BotState<OpponentState> {
 	public void drawPath(Graphics2D g, int index) {
 		g.setStroke(new BasicStroke(1));
 		
-		g.setColor(Color.green);
+		g.setColor(Utility.setAlpha(Color.green, 0.4));
 		position.drawTo(g, heading, velocity * 5);
 		
 		float ratio = (float)index / Rainbot.PREDICTIVE_LOOKBEHIND;
