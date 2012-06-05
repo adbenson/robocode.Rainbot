@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import net.adbenson.robocode.botstate.BattleHistory;
@@ -11,6 +12,8 @@ import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
 import net.adbenson.robocode.bullet.Bullet;
+import net.adbenson.robocode.prediction.HeadingVelocityStateComparator;
+import net.adbenson.robocode.prediction.ImpossibleToSeeTheFutureIsException;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
@@ -127,21 +130,25 @@ public class Rainbot extends AdvancedRobot {
 
 		    	//ONLY look into prediction if we're not preparing to fire or have recently fired 
 	    		if (!ready && this.getGunHeat() <= getGunCoolingRate()) {
-		    		opponentPrediction = predictTheFuture();
-		    		
-		    		if (opponentPrediction != null) {
-		    			
-						try {
-							Target target = selectTargetFromPrediction(opponentPrediction, TARGET_FIREPOWER);
-							requiredFirepower = target.power;							
-			    			this.setTurnGunRightRadians(Utility.angleDifference(target.bearing, this.getGunHeadingRadians()));
-			    			
-			    			ready = true;
-			    			
-						} catch (UnableToTargetPredictionException e) {
-							System.out.println("Predicted target unreachable");
-						}
-		    		}
+	    			
+					try {
+						opponentPrediction = predictTheFuture();
+
+						Entry<Double, OpponentState> target = selectTargetFromPrediction(
+								opponentPrediction, TARGET_FIREPOWER);
+
+						requiredFirepower = target.getKey();
+						setGunTurnToTarget(target.getValue());
+
+						ready = true;
+
+					} catch (UnableToTargetPredictionException e) {
+						System.out.println("Predicted target unreachable");
+					} catch (PredictiveStateUnavailableException e) {
+						System.out.println("Not enough history or future to provide prediction");
+					} catch (ImpossibleToSeeTheFutureIsException e) {
+						System.out.println("Impossible to see, the future is.");
+					}
 		    		
 	    			aim = false;
 	    			fire = false;
@@ -157,7 +164,13 @@ public class Rainbot extends AdvancedRobot {
 	    } while (true);
 	}
 	
-	private Target selectTargetFromPrediction(LinkedList<OpponentState> prediction, double targetPower) throws UnableToTargetPredictionException {	
+	private void setGunTurnToTarget(OpponentState target) {
+		Vector offset = target.position.subtract(getPosition());
+		double heading = Utility.angleDifference(offset.getAngle(), this.getGunHeadingRadians());
+		this.setTurnGunRightRadians(heading);
+	}
+	
+	private Map.Entry<Double, OpponentState> selectTargetFromPrediction(LinkedList<OpponentState> prediction, double targetPower) throws UnableToTargetPredictionException {	
 		Vector position = getPosition();						
 		int turnsToPosition = 0;
 		
@@ -189,14 +202,13 @@ public class Rainbot extends AdvancedRobot {
 			closestMatch = potentialTargets.lastEntry();
 		}
 		
-		double power = closestMatch.getKey();
+		//Store this so we can draw it later
 		candidateTarget = closestMatch.getValue();
-		Vector offset = candidateTarget.position.subtract(position);
 		
-		return new Target(power, offset.getAngle());
+		return closestMatch;
 	}
 
-	private LinkedList<OpponentState> predictTheFuture() {
+	private LinkedList<OpponentState> predictTheFuture() throws PredictiveStateUnavailableException, ImpossibleToSeeTheFutureIsException {
 		OpponentState o = history.getCurrentOpponent();
 		LinkedList<OpponentState> prediction = null;
 
@@ -205,11 +217,10 @@ public class Rainbot extends AdvancedRobot {
 		OpponentState bestMatch = o.matchStateSequence(PREDICTIVE_LOOKBEHIND, predictiveComparator);
 		
 		if (bestMatch != null) {
-    		try {
-    			prediction = o.predictStates(bestMatch, PREDICTIVE_LOOKBEHIND);
-			} catch (PredictiveStateUnavailableException e) {
-				System.out.println("Prediction failed due to unavailable data");
-			}
+    		prediction = o.predictStates(bestMatch, PREDICTIVE_LOOKBEHIND);
+		}
+		else {
+			throw new ImpossibleToSeeTheFutureIsException();
 		}
 		
 		System.out.print("time:"); System.out.format("%,8d", System.nanoTime() - start);
