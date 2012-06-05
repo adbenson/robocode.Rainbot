@@ -26,4 +26,8 @@ System.out.println("Bullet marked for deletion");
 		
 		this.removeAll(delete);
 	}
+	
+	public void remove(robocode.Bullet bullet) {
+		//TODO
+	}
 }

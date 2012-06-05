@@ -345,11 +345,12 @@ System.out.println("Firing@"+power);
 	}
 	
 	public void onBulletHitBullet(BulletHitBulletEvent event) {
-		//How to detect this...
+		history.getSelfBullets().remove(event.getBullet());
+		history.getOpponentBullets().remove(event.getHitBullet());
 	}
 	
 	public void onBulletMissed(BulletMissedEvent event) {
-		history.getSelfBullets().removeFirst();
+		history.getSelfBullets().remove(event.getBullet());
 	}
 	
 	public void onHitByBullet(HitByBulletEvent event) {
