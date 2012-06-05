@@ -1,19 +1,17 @@
 package net.adbenson.robocode.rainbot;
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import net.adbenson.robocode.botstate.BattleHistory;
-import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
-import net.adbenson.robocode.bullet.Bullet;
-import net.adbenson.robocode.prediction.HeadingVelocityStateComparator;
 import net.adbenson.robocode.prediction.ImpossibleToSeeTheFutureIsException;
+import net.adbenson.robocode.prediction.PredictiveTargeting;
+import net.adbenson.robocode.prediction.UnableToTargetPredictionException;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
@@ -31,15 +29,14 @@ import robocode.util.Utils;
 
 public class Rainbot extends AdvancedRobot {
 	
-	public static final int PREDICTIVE_LOOKBEHIND = 100;
-	public static final double TARGET_FIREPOWER = 1;
 	
 	public static final double MAX_TURN = Math.PI / 5d;
-
 	
 	private BattleHistory history;
 	
 	private RoundStatus status;
+	
+	private PredictiveTargeting predictor;
 	
 	private int preferredDirection;
 	
@@ -47,11 +44,6 @@ public class Rainbot extends AdvancedRobot {
 	private Rectangle2D safety;
 	
 	private double preferredDistance;
-
-	private StateMatchComparator<OpponentState> predictiveComparator;
-	
-	private LinkedList<OpponentState> opponentPrediction;
-	private OpponentState candidateTarget;
 	
 	private boolean opponentAlive;
 	
@@ -64,24 +56,15 @@ public class Rainbot extends AdvancedRobot {
 			
 		status = new RoundStatus();	
 		
-		preferredDirection = 1;
+		predictor = new PredictiveTargeting(history);
 		
-		predictiveComparator = new HeadingVelocityStateComparator();
+		preferredDirection = 1;
 		
 		color = new BotColor();
 	}
 	
 	public void run() {
-		Vector botSize = new Vector(getWidth(), getHeight());
-		
-		field = new Rectangle2D.Double(
-				(botSize.x/2)+1, (botSize.y/2)+1, 
-				getBattleFieldWidth()-(botSize.x-2), getBattleFieldHeight()-(botSize.y-2)
-		);
-		safety = new Rectangle2D.Double(
-				botSize.x, botSize.y, 
-				getBattleFieldWidth()-(botSize.x*2), getBattleFieldHeight()-(botSize.y*2)
-		);
+		generateBoundries();
 		
 		opponentAlive = true;
 		
@@ -112,7 +95,7 @@ public class Rainbot extends AdvancedRobot {
 //			double velocityTrend = Math.abs(o.previous.change.velocity - o.change.velocity);
 //			double headingTrend = Math.abs(o.previous.change.heading - o.change.heading);
 	    	
-	    	if (getTime() > PREDICTIVE_LOOKBEHIND) {
+	    	if (predictor.canPredict(getTime())) {
 //	    		if (velocityTrend < 0.01 && headingTrend < 0.01 && o.change.heading < 0.01) {
 	    		
 		    	if (ready && Math.abs(this.getGunTurnRemainingRadians()) < Rules.GUN_TURN_RATE_RADIANS) {	    		
@@ -127,15 +110,15 @@ public class Rainbot extends AdvancedRobot {
 		    		fire = true;
 		    	}
 
-
 		    	//ONLY look into prediction if we're not preparing to fire or have recently fired 
 	    		if (!ready && this.getGunHeat() <= getGunCoolingRate()) {
 	    			
 					try {
-						opponentPrediction = predictTheFuture();
+						LinkedList<OpponentState> opponentPrediction = 
+								predictor.predictTheFuture();
 
-						Entry<Double, OpponentState> target = selectTargetFromPrediction(
-								opponentPrediction, TARGET_FIREPOWER);
+						Entry<Double, OpponentState> target = 
+								predictor.selectTargetFromPrediction(opponentPrediction);
 
 						requiredFirepower = target.getKey();
 						setGunTurnToTarget(target.getValue());
@@ -164,69 +147,23 @@ public class Rainbot extends AdvancedRobot {
 	    } while (true);
 	}
 	
+	private void generateBoundries() {
+		Vector botSize = new Vector(getWidth(), getHeight());
+		
+		field = new Rectangle2D.Double(
+				(botSize.x/2)+1, (botSize.y/2)+1, 
+				getBattleFieldWidth()-(botSize.x-2), getBattleFieldHeight()-(botSize.y-2)
+		);
+		safety = new Rectangle2D.Double(
+				botSize.x, botSize.y, 
+				getBattleFieldWidth()-(botSize.x*2), getBattleFieldHeight()-(botSize.y*2)
+		);		
+	}
+
 	private void setGunTurnToTarget(OpponentState target) {
 		Vector offset = target.position.subtract(getPosition());
 		double heading = Utility.angleDifference(offset.getAngle(), this.getGunHeadingRadians());
 		this.setTurnGunRightRadians(heading);
-	}
-	
-	private Map.Entry<Double, OpponentState> selectTargetFromPrediction(LinkedList<OpponentState> prediction, double targetPower) throws UnableToTargetPredictionException {	
-		Vector position = getPosition();						
-		int turnsToPosition = 0;
-		
-		TreeMap<Double, OpponentState> potentialTargets = new TreeMap<Double, OpponentState>();
-		
-		for(OpponentState target : prediction) {
-			turnsToPosition++;
-						
-			double distance = target.position.distance(position);
-			double requiredPower = Bullet.getRequiredPower(turnsToPosition, distance);
-		
-			//If the power required is below the minimum, it can't possibly get there in time.
-			if (requiredPower >= Rules.MIN_BULLET_POWER && requiredPower <= Rules.MAX_BULLET_POWER) {
-				potentialTargets.put(requiredPower, target);				
-			}
-		}
-		
-		//If nothing is added to the list, nothing is in range.
-		if (potentialTargets.isEmpty()) {
-			throw new UnableToTargetPredictionException();
-		}
-		
-		//Get the closest entry with a required power >= targetPower
-		Map.Entry<Double, OpponentState> closestMatch = 
-			potentialTargets.ceilingEntry(targetPower);
-		
-		//If there's none, just take the highest available.
-		if (closestMatch == null) {
-			closestMatch = potentialTargets.lastEntry();
-		}
-		
-		//Store this so we can draw it later
-		candidateTarget = closestMatch.getValue();
-		
-		return closestMatch;
-	}
-
-	private LinkedList<OpponentState> predictTheFuture() throws PredictiveStateUnavailableException, ImpossibleToSeeTheFutureIsException {
-		OpponentState o = history.getCurrentOpponent();
-		LinkedList<OpponentState> prediction = null;
-
-		long start = System.nanoTime();
-		
-		OpponentState bestMatch = o.matchStateSequence(PREDICTIVE_LOOKBEHIND, predictiveComparator);
-		
-		if (bestMatch != null) {
-    		prediction = o.predictStates(bestMatch, PREDICTIVE_LOOKBEHIND);
-		}
-		else {
-			throw new ImpossibleToSeeTheFutureIsException();
-		}
-		
-		System.out.print("time:"); System.out.format("%,8d", System.nanoTime() - start);
-		System.out.println(" ("+getTime()+")");
-
-		return prediction;
 	}
 	
 	private void faceOpponent() {
@@ -286,7 +223,7 @@ public class Rainbot extends AdvancedRobot {
 	public void setFire(double power) {
 System.out.println("Firing@"+power);		
 		robocode.Bullet bullet = super.setFireBullet(power);
-		history.selfFired(candidateTarget, bullet);
+		history.selfFired(predictor.getTarget(), bullet);
 	}
 	
 	public void onScannedRobot(ScannedRobotEvent e) {
@@ -314,11 +251,11 @@ System.out.println("Firing@"+power);
 	
 	public void onPaint(Graphics2D g) {
 		
-//		g.setColor(Color.red);
-//		g.draw(field);
-//		
-//		g.setColor(Color.green);
-//		g.draw(safety);
+		g.setColor(Color.red);
+		g.draw(field);
+		
+		g.setColor(Color.green);
+		g.draw(safety);
 		
 		if (history.hasCurrentState()) {
 			
@@ -332,11 +269,7 @@ System.out.println("Firing@"+power);
 			history.getCurrentState().self.draw(g);
 		}
 		
-		if (opponentPrediction != null) { 
-			for(int i=0; i<opponentPrediction.size(); i++) {
-				opponentPrediction.get(i).drawPath(g, i);
-			}
-		}
+		predictor.drawPrediction(g);
 	}
 		
 	public void onBulletHit(BulletHitEvent event)  {
@@ -390,9 +323,6 @@ System.out.println("Firing@"+power);
 		}
 	}
 
-	@SuppressWarnings("serial")
-	private class UnableToTargetPredictionException extends Exception {}
-	
 	private class Target {
 		public final double power;
 		public final double bearing;
