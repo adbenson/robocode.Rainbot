@@ -19,13 +19,10 @@ public class SelfBullet extends Bullet {
 	private final OpponentState target;
 	private final int colorIndex;
 	
-	private final robocode.Bullet bullet;
-	
 	public SelfBullet(SelfState self, robocode.Bullet bullet, long time, OpponentState target) {
 		super(self, bullet, time);
 		this.target = target;
 		this.colorIndex = (nextColorIndex++) % COLOR_WHEEL;
-		this.bullet = bullet;
 		
 System.out.println("V:"+this.velocity+","+bullet.getVelocity());
 System.out.println("P:"+this.power+","+bullet.getPower());

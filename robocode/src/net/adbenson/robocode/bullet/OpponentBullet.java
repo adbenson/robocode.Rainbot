@@ -6,7 +6,6 @@ import java.awt.geom.Ellipse2D;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.rainbot.Rainbot;
 import net.adbenson.utility.Utility;
-import net.adbenson.utility.Vector;
 
 
 public class OpponentBullet extends Bullet {

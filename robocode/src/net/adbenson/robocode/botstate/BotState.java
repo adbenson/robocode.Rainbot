@@ -23,6 +23,7 @@ public abstract class BotState<T extends BotState<T>> {
 	private T next;
 	public final T change;
 	
+	@SuppressWarnings("unchecked")
 	protected BotState(String name, double energy, double heading, double velocity, Vector position, T previous) {
 		this.name = name;
 		this.energy = energy;
@@ -180,6 +181,7 @@ public abstract class BotState<T extends BotState<T>> {
 	
 	public T matchStateSequence(int turnsToMatch, StateMatchComparator<T> compare) {
 		//Initialize the first reference state
+		@SuppressWarnings("unchecked")
 		T reference = (T) this;
 		//Find the first match candidate
 		T test = previousState(turnsToMatch);

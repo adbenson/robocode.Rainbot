@@ -11,14 +11,12 @@ import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
 import net.adbenson.robocode.bullet.Bullet;
-import net.adbenson.robocode.trigger.TriggerSet;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletHitEvent;
 import robocode.BulletMissedEvent;
-import robocode.CustomEvent;
 import robocode.HitByBulletEvent;
 import robocode.HitRobotEvent;
 import robocode.HitWallEvent;
@@ -236,7 +234,7 @@ public class Rainbot extends AdvancedRobot {
     		
     		//Turn farther away the closer we are - by 1/2 field away, straighten out
     		double distanceRatio = (preferredDistance - o.distance) / (preferredDistance);   		
-//    		offFace += MAX_TURN * distanceRatio * preferredDirection;
+    		offFace += MAX_TURN * distanceRatio * preferredDirection;
     		    		
     		//Multiply the offset - we don't have all day! Move it! (If it's too high, it introduces jitter.)
     		setTurnRight(offFace * 10); 

@@ -2,8 +2,6 @@ package net.adbenson.robocode.rainbot;
 
 import java.awt.Color;
 
-import net.adbenson.robocode.trigger.Trigger;
-
 import robocode.Robot;
 
 public class BotColor {

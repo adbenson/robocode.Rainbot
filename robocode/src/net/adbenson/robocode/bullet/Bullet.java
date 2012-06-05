@@ -2,7 +2,6 @@ package net.adbenson.robocode.bullet;
 import java.awt.Graphics2D;
 
 import net.adbenson.robocode.botstate.BotState;
-import net.adbenson.robocode.botstate.SelfState;
 import net.adbenson.utility.Vector;
 
 
