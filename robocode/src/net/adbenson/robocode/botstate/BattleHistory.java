@@ -12,6 +12,8 @@ public class BattleHistory {
 	
 	private BattleState currentState;
 	
+	private int stateCount;
+	
 	public BattleHistory() {
 		super();
 		
@@ -19,6 +21,8 @@ public class BattleHistory {
 		selfBullets = new BulletQueue<SelfBullet>();
 		
 		currentState = null;
+		
+		stateCount = 0;
 	}
 	
 	public void addBots(AdvancedRobot self, ScannedRobotEvent opp, long time) {
@@ -32,6 +36,7 @@ public class BattleHistory {
 		}
 		
 		currentState = next;
+		stateCount++;
 	}
 
 	public BulletQueue<SelfBullet> getSelfBullets() {
@@ -71,6 +76,10 @@ public class BattleHistory {
 	}
 
 	public boolean hasCurrentState() {
-		return currentState != null;
+		return stateCount >= 1;
+	}
+
+	public int getStateCount() {
+		return stateCount;
 	}
 }

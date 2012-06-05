@@ -93,7 +93,7 @@ public class PredictiveTargeting {
 		}
 		
 		System.out.print("time:"); System.out.format("%,8d", System.nanoTime() - start);
-		System.out.println(" ("+getTime()+")");
+		System.out.println(" ("+history.getStateCount()+")");
 
 		return prediction;
 	}
