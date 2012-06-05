@@ -3,15 +3,13 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import net.adbenson.robocode.botstate.BattleHistory;
-import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
+import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
 import net.adbenson.robocode.bullet.Bullet;
 import net.adbenson.robocode.trigger.Trigger;

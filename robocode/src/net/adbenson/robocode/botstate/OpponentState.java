@@ -3,7 +3,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.LinkedList;
-import java.util.List;
 
 import net.adbenson.robocode.rainbot.Rainbot;
 import net.adbenson.utility.Utility;
