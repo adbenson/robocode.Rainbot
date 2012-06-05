@@ -66,8 +66,8 @@ public class OpponentState extends BotState<OpponentState> {
 		return relative.add(new Vector(self.getX(), self.getY()));
 	}
 	
-	public List<OpponentState> predictStates(OpponentState basis, int nTurns) throws PredictiveStateUnavailableException{
-		List<OpponentState> nextStates = new LinkedList<OpponentState>();
+	public LinkedList<OpponentState> predictStates(OpponentState basis, int nTurns) throws PredictiveStateUnavailableException{
+		LinkedList<OpponentState> nextStates = new LinkedList<OpponentState>();
 		//Start with basis.next because basis matches the current state
 		OpponentState nextBasis = basis.getNext();
 		OpponentState nextState = this;
