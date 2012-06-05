@@ -267,6 +267,7 @@ System.out.println("Firing@"+power);
 	public void onBulletHit(BulletHitEvent event)  {
 		color.startRainbow();
 		status.hitToOpponent = true;
+		predictor.hitTarget();
 	}
 	
 	public void onBulletHitBullet(BulletHitBulletEvent event) {
@@ -276,6 +277,7 @@ System.out.println("Firing@"+power);
 	
 	public void onBulletMissed(BulletMissedEvent event) {
 		history.getSelfBullets().remove(event.getBullet());
+		predictor.missedTarget();
 	}
 	
 	public void onHitByBullet(HitByBulletEvent event) {
