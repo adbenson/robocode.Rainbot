@@ -45,7 +45,7 @@ public abstract class Bullet {
 	}
 	
 	public static double getRequiredPower(int turns, double distance) {
-		return ((distance / (turns + TIME_FUDGE)) * 20.0) / 3.0;
+		return (20.0 - (distance / (turns + TIME_FUDGE))) / 3.0;
 	}
     
     public double getDistanceTravelled() {
