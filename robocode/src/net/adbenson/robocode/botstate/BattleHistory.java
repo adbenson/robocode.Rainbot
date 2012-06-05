@@ -8,8 +8,7 @@ import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
 @SuppressWarnings("serial")
-public class BattleHistory extends LinkedList<BattleState> {
-	private final static int MAX_CAPACITY = 1000;
+public class BattleHistory {
 	
 	private BulletQueue<OpponentBullet> opponentBullets;
 	private BulletQueue<SelfBullet> selfBullets;
@@ -25,7 +24,7 @@ public class BattleHistory extends LinkedList<BattleState> {
 		currentState = null;
 	}
 	
-	public boolean addBots(AdvancedRobot self, ScannedRobotEvent opp, long time) {
+	public void addBots(AdvancedRobot self, ScannedRobotEvent opp, long time) {
 		BattleState next;
 		
 		if (getCurrentState() != null) {
@@ -35,18 +34,7 @@ public class BattleHistory extends LinkedList<BattleState> {
 			next = new BattleState(self, opp, time);
 		}
 		
-		return this.add(next);
-	}
-
-	public boolean add(BattleState state) {
-		
-		while (this.size() > MAX_CAPACITY) {
-			this.removeFirst();
-		}
-		
-		currentState = state;
-		
-		return super.add(getCurrentState());
+		currentState = next;
 	}
 
 	public BulletQueue<SelfBullet> getSelfBullets() {
@@ -83,5 +71,9 @@ public class BattleHistory extends LinkedList<BattleState> {
 						candidateTarget
 				)
 		);
+	}
+
+	public boolean hasCurrentState() {
+		return currentState != null;
 	}
 }

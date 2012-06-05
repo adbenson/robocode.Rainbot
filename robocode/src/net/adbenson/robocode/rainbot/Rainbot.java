@@ -109,7 +109,7 @@ public class Rainbot extends AdvancedRobot {
 //			double velocityTrend = Math.abs(o.previous.change.velocity - o.change.velocity);
 //			double headingTrend = Math.abs(o.previous.change.heading - o.change.heading);
 	    	
-	    	if (history.size() > PREDICTIVE_LOOKBEHIND) {
+	    	if (getTime() > PREDICTIVE_LOOKBEHIND) {
 //	    		if (velocityTrend < 0.01 && headingTrend < 0.01 && o.change.heading < 0.01) {
 	    		
 		    	if (ready && Math.abs(this.getGunTurnRemainingRadians()) < Rules.GUN_TURN_RATE_RADIANS) {	    		
@@ -222,7 +222,7 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	private void faceOpponent() {
-    	if (!history.isEmpty()) {
+    	if (history.hasCurrentState()) {
     		OpponentState o = history.getCurrentOpponent();
     		double offFace = o.bearing;
     		//We don't care which direction we face, so treat either direction the same.
@@ -312,7 +312,7 @@ System.out.println("Firing@"+power);
 //		g.setColor(Color.green);
 //		g.draw(safety);
 		
-		if (!history.isEmpty()) {
+		if (history.hasCurrentState()) {
 			
 			g.setStroke(new BasicStroke(3));
 			
