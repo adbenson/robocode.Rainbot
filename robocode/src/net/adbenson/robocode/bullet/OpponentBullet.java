@@ -6,6 +6,7 @@ import java.awt.geom.Ellipse2D;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.rainbot.Rainbot;
 import net.adbenson.utility.Utility;
+import net.adbenson.utility.Vector;
 
 
 public class OpponentBullet extends Bullet {
@@ -25,10 +26,7 @@ public class OpponentBullet extends Bullet {
 		g.setColor(Utility.setAlpha(Color.white, 0.25));
 		g.draw(radius);
 
-		double endX = Math.sin(heading) * getDistanceTravelled();
-		double endY = Math.cos(heading) * getDistanceTravelled();
-
-		g.drawLine(origin.intX(), origin.intY(), (int)(origin.x+endX), (int)(origin.y + endY));
+		origin.drawTo(g, heading, getDistanceTravelled());
 		
 	}
 
