@@ -125,22 +125,16 @@ public class Rainbot extends AdvancedRobot {
 		    	}
 
 
-		    	//ONLY look into prediction if we're not preparing to fire or have just fired 
+		    	//ONLY look into prediction if we're not preparing to fire or have recently fired 
 	    		if (!ready && this.getGunHeat() <= getGunCoolingRate()) {
 		    		opponentPrediction = predictTheFuture();
-		    		
-	    			aim = false;
-	    			fire = false;
 		    		
 		    		if (opponentPrediction != null) {
 		    			
 						try {
 							Target target = selectTargetFromPrediction(opponentPrediction, TARGET_FIREPOWER);
-							
-							requiredFirepower = target.power;
-							
-			    			this.setTurnGunRightRadians(
-			    					Utility.angleDifference(target.bearing, this.getGunHeadingRadians()));
+							requiredFirepower = target.power;							
+			    			this.setTurnGunRightRadians(Utility.angleDifference(target.bearing, this.getGunHeadingRadians()));
 			    			
 			    			ready = true;
 			    			
@@ -148,6 +142,9 @@ public class Rainbot extends AdvancedRobot {
 							System.out.println("Predicted target unreachable");
 						}
 		    		}
+		    		
+	    			aim = false;
+	    			fire = false;
 	    		}   	
 
 	    	
