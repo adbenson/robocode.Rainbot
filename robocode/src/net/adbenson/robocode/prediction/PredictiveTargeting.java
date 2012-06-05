@@ -14,14 +14,16 @@ import robocode.Rules;
 
 public class PredictiveTargeting {
 	
-
 	public static final int PREDICTION_LOOKBEHIND = 100;
 	
-	public static final double INITIAL_CONFIDENCE = 0.5;
+	public static final double PREDICTION_CONFIDENCE_SHIFT = 0.07;
+	
+	public static final int LOW_CONFIDENCE_TURN_THRESHOLD = 5;
+
+	private static final double LOW_CONFIDENCE_POWER_LIMIT = 0.15;
 	
 	private final double POWER_RANGE = Rules.MAX_BULLET_POWER - Rules.MIN_BULLET_POWER;
 	
-	private double confidence;
 	private BattleHistory history;
 	
 	private StateMatchComparator<OpponentState> predictiveComparator;
@@ -29,13 +31,45 @@ public class PredictiveTargeting {
 	private LinkedList<OpponentState> opponentPrediction;
 	private OpponentState candidateTarget;
 	
+	private int hits;
+	private int misses;
+	private double accuracy;
+	
 	public PredictiveTargeting(BattleHistory history) {
 		this.history = history;
-		this.confidence = INITIAL_CONFIDENCE;
 		predictiveComparator = new HeadingVelocityStateComparator();
+		
+		hits = 0;
+		misses = 0;
+		updateAccuracy();
 	}
 	
-	private double getTargetFirepower() {
+
+	private double getConfidence() {
+		//Until we have some hits and misses, we have no confidence.
+		if (hits == 0 && misses == 0) {
+			return 0;
+		}
+		//If we've only ever hit, we're very confident
+		if (hits > 1 && misses == 0) {
+			return 1;
+		}
+		
+		int turns = history.getStateCount();
+		double comparableHistories = turns / PREDICTION_LOOKBEHIND;
+		
+		//If we have insufficient historical data, we have no confidence
+		if (comparableHistories < 2) {
+			return 0;
+		}
+		
+		//Increase confidence with accuracy and good history
+		double confidence = accuracy + (comparableHistories * PREDICTION_CONFIDENCE_SHIFT);
+		
+		return Math.min(1, confidence);		
+	}
+	
+	private double getTargetFirepower(double confidence) {
 		return (POWER_RANGE * confidence) + Rules.MIN_BULLET_POWER;
 	}
 	
@@ -50,13 +84,41 @@ public class PredictiveTargeting {
 			throw new TargetOutOfRangeException();
 		}
 		
-		PredictedTarget closestMatch = null;
-		double targetPower = getTargetFirepower();
+		return selectBestTarget(potentialTargets);
+	}
+	
+	private PredictedTarget selectBestTarget(LinkedList<PredictedTarget> targets) throws ImpossibleToSeeTheFutureIsException{
+		double confidence = getConfidence();
+		
+		if (confidence <= 0) {
+			//If confidence is very low, only shoot if the closest target requires little power.
+			Collections.sort(targets, PredictedTarget.turnsComparator);
+			
+			for(PredictedTarget target : targets) {
+				if (target.requiredPower <= LOW_CONFIDENCE_POWER_LIMIT &&
+						target.turnsToPosition <= LOW_CONFIDENCE_TURN_THRESHOLD) {
+					return target;
+				}
+			}
+
+			throw new ImpossibleToSeeTheFutureIsException("Confidence too low, no easy shots available.");
+		}
+		
+		//Sort by POWER
+		Collections.sort(targets, PredictedTarget.powerComparator);
+		
+		//If confidence is very high, go for the biggest shot
+		if (confidence >= 1) {
+			return targets.getLast();
+		}
+		
+		//Otherwise, try to find the target power level
+		double targetPower = getTargetFirepower(confidence);
 		
 		//Get the closest entry with a required power >= targetPower
-		for (PredictedTarget target : potentialTargets) {
+		PredictedTarget closestMatch = null;
+		for (PredictedTarget target : targets) {
 			closestMatch = target;
-			
 			if (target.requiredPower >= targetPower) {
 				break;
 			}
@@ -103,7 +165,7 @@ public class PredictiveTargeting {
 			//If the power required is below the minimum, it can't possibly get there in time.
 			if (requiredPower >= Rules.MIN_BULLET_POWER && 
 					requiredPower <= Rules.MAX_BULLET_POWER) {
-				potentialTargets.add(new PredictedTarget(requiredPower, target));				
+				potentialTargets.add(new PredictedTarget(requiredPower, target, turnsToPosition));				
 			}
 		}
 		
@@ -111,8 +173,6 @@ public class PredictiveTargeting {
 		if (potentialTargets.isEmpty()) {
 			throw new TargetOutOfRangeException();
 		}
-		
-		Collections.sort(potentialTargets, PredictedTarget.powerComparator);
 		
 		return potentialTargets;
 	}
@@ -132,5 +192,25 @@ public class PredictiveTargeting {
 			}
 		}
 	}
+
+	public void missedTarget() {
+		misses++;
+		updateAccuracy();
+	}
+
+	public void hitTarget() {
+		hits++;
+		updateAccuracy();
+	}
+	
+	private void updateAccuracy() {
+		if (hits == misses) {
+			accuracy = 0.5;
+		}
+		else {
+			accuracy = (double)hits / (hits + misses);
+		}
+	}
+
 
 }
