@@ -124,7 +124,7 @@ public class OpponentState extends BotState<OpponentState> {
 
 	public void draw(Graphics2D g) {
 		g.setColor(Utility.setAlpha(Color.orange, 0.6));
-		Utility.drawCrosshairs(g, position, 20, 35);
+		Utility.drawCrosshairs(g, position, 40, 50);
 		
 		g.setColor(Utility.setAlpha(Color.pink, 0.6));
 		
