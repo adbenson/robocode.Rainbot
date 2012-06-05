@@ -27,7 +27,7 @@ public class SelfState extends BotState<SelfState> {
 
 	public SelfState(AdvancedRobot self, SelfState previous) {
 		super(self, previous);
-		this.gunHeading = self.getGunHeading();
+		this.gunHeading = self.getGunHeadingRadians();
 		this.gunHeat = self.getGunHeat();
 	}
 
