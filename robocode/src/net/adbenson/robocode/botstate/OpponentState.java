@@ -60,7 +60,7 @@ public class OpponentState extends BotState<OpponentState> {
 	private static Vector calculatePosition(ScannedRobotEvent current, AdvancedRobot self) {
 		double absoluteBearing = absoluteBearing(self, current);
 		
-		Vector relative = Vector.getVectorFromAngle(absoluteBearing, current.getDistance());
+		Vector relative = Vector.getVectorFromAngleAndLength(absoluteBearing, current.getDistance());
 
 		return relative.add(new Vector(self.getX(), self.getY()));
 	}
@@ -79,7 +79,7 @@ public class OpponentState extends BotState<OpponentState> {
 			double newHeading = (nextState.heading + nextBasis.change.heading) % Utility.TWO_PI;
 			double newVelocity = nextState.velocity + nextBasis.change.velocity;
 			
-			Vector newPosition = nextState.position.add(Vector.getVectorFromAngle(newHeading, newVelocity));
+			Vector newPosition = nextState.position.add(Vector.getVectorFromAngleAndLength(newHeading, newVelocity));
 						
 //			String name, double energy, double heading, double velocity, 
 //			Vector position, OpponentState previous, 

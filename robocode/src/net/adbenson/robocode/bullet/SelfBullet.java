@@ -37,7 +37,7 @@ System.out.println("P:"+this.power+","+bullet.getPower());
 		
 		Utility.drawCrosshairs(g, target.position, 5, 40);
 		
-		Vector current = Vector.getVectorFromAngle(heading, getDistanceTravelled()).add(origin);
+		Vector current = Vector.getVectorFromAngleAndLength(heading, getDistanceTravelled()).add(origin);
 		
 //		origin.drawTo(g, heading, getDistanceTravelled());
 		
