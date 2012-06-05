@@ -74,11 +74,12 @@ public class BattleHistory extends LinkedList<BattleState> {
 		);
 	}
 
-	public void selfFired() {
+	public void selfFired(OpponentState candidateTarget) {
 		selfBullets.add(
 				new SelfBullet(
 						currentState.self,
-						currentState.time
+						currentState.time,
+						candidateTarget
 				)
 		);
 	}
