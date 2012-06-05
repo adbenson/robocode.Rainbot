@@ -1,6 +1,5 @@
 package net.adbenson.robocode.rainbot;
 import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
@@ -12,7 +11,6 @@ import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
 import net.adbenson.robocode.bullet.Bullet;
-import net.adbenson.robocode.trigger.Trigger;
 import net.adbenson.robocode.trigger.TriggerSet;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
@@ -36,16 +34,6 @@ public class Rainbot extends AdvancedRobot {
 	
 	private BattleHistory history;
 	
-	private TriggerSet triggers;
-	
-	private float hue;
-	
-	private static final float HUE_SHIFT = 0.003f;
-	private static final int RAINBOW_TURNS = 10;
-	
-	private boolean rainbowMode;
-	private float rainbowTurn;
-	
 	private Status status;
 	
 	private int preferredDirection;
@@ -61,27 +49,24 @@ public class Rainbot extends AdvancedRobot {
 	
 	private OpponentState candidateTarget;
 	
-	private double TARGET_FIREPOWER = 3;
+	private double TARGET_FIREPOWER = 1;
 	
 	private boolean opponentAlive;
+	
+	private BotColor color;
 	
 	public Rainbot() {
 		super();
 		
 		history = new BattleHistory();
-		
-		triggers = new TriggerSet();
-		
-		hue = 0;
-		
-		rainbowMode = false;
 			
 		status = new Status();	
 		
-		preferredDirection = -1;
+		preferredDirection = 1;
 		
 		predictiveComparator = new HeadingVelocityStateComparator();
 		
+		color = new BotColor();
 	}
 	
 	public void run() {
@@ -103,10 +88,6 @@ public class Rainbot extends AdvancedRobot {
 		setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(true);
 		setAdjustRadarForRobotTurn(true);
-		
-	    populateTriggers();
-	    
-	    triggers.addTo(this);
 	    
 	    startRadarLock();
 	    
@@ -116,7 +97,7 @@ public class Rainbot extends AdvancedRobot {
 		boolean fire = false;
 	    
 	    do {
-	    	hueShift();
+	    	color.hueShift(this);
 	    	
 	    	//Square off!
 	    	faceOpponent();
@@ -155,7 +136,7 @@ public class Rainbot extends AdvancedRobot {
 		    		if (opponentPrediction != null) {
 		    			
 						try {
-							Target target = getBearingFromPrediction(opponentPrediction, TARGET_FIREPOWER);
+							Target target = selectTargetFromPrediction(opponentPrediction, TARGET_FIREPOWER);
 							
 							requiredFirepower = target.power;
 							
@@ -180,7 +161,7 @@ public class Rainbot extends AdvancedRobot {
 	    } while (true);
 	}
 	
-	private Target getBearingFromPrediction(LinkedList<OpponentState> prediction, double targetPower) throws UnableToTargetPredictionException {	
+	private Target selectTargetFromPrediction(LinkedList<OpponentState> prediction, double targetPower) throws UnableToTargetPredictionException {	
 		Vector position = getPosition();						
 		int turnsToPosition = 0;
 		
@@ -255,7 +236,7 @@ public class Rainbot extends AdvancedRobot {
     		
     		//Turn farther away the closer we are - by 1/2 field away, straighten out
     		double distanceRatio = (preferredDistance - o.distance) / (preferredDistance);   		
-    		offFace += MAX_TURN * distanceRatio * preferredDirection;
+//    		offFace += MAX_TURN * distanceRatio * preferredDirection;
     		    		
     		//Multiply the offset - we don't have all day! Move it! (If it's too high, it introduces jitter.)
     		setTurnRight(offFace * 10); 
@@ -350,34 +331,9 @@ System.out.println("Firing@"+power);
 			}
 		}
 	}
-	
-	public void onCustomEvent(CustomEvent event) {
-		triggers.trigger(event);
-	}
-	
-	public void hueShift() {
-		float shift = HUE_SHIFT * (rainbowMode? 3 : 1);
-		hue = (hue + shift) % 1.0f;
-		setColors(
-				Color.getHSBColor(hue, 1, 1),
-				Color.getHSBColor(hue + 0.25f, 1, 1),
-				Color.getHSBColor(hue + 0.7f, 1, 1),
-				Color.orange, //It's just confusing if you can't see the bullet.
-				Color.getHSBColor(hue + 0.75f, 1, 1)
-		);
-	}
-	
-	private void hueJump() {
-		hue = (hue + 0.3f) % 1.0f;
-	}
-	
-	private void rainbow() {
-		rainbowMode = true;
-		rainbowTurn = 0;
-	}
-	
+		
 	public void onBulletHit(BulletHitEvent event)  {
-		rainbow();
+		color.startRainbow();
 		status.hitToOpponent = true;
 	}
 	
@@ -404,24 +360,7 @@ System.out.println("Firing@"+power);
 	public static Rectangle2D getField() {
 		return field;
 	}
-		
-	private void populateTriggers() {
-		
-		triggers.add(new Trigger("b") {
-			@Override
-			public void action() {
-				hueJump();
-				rainbowTurn++;
-				rainbowMode = (rainbowTurn <= RAINBOW_TURNS);
-			}
-
-			@Override
-			public boolean test() {
-				return rainbowMode;
-			}
-		});
-	}
-	
+			
 	class Status {
 		int bulletCount = 0;
 		
@@ -443,6 +382,7 @@ System.out.println("Firing@"+power);
 		}
 	}
 
+	@SuppressWarnings("serial")
 	private class UnableToTargetPredictionException extends Exception {}
 	
 	private class Target {
