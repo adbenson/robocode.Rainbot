@@ -2,6 +2,7 @@ package net.adbenson.robocode.bullet;
 import java.awt.Graphics2D;
 
 import net.adbenson.robocode.botstate.BotState;
+import net.adbenson.robocode.botstate.SelfState;
 import net.adbenson.utility.Vector;
 
 
@@ -26,6 +27,15 @@ public abstract class Bullet {
 		this.velocity = velocity();
 	}
 	
+	public Bullet(BotState<?> bot, robocode.Bullet bullet, long time) {
+		this.bot = bot;
+		this.origin = bot.position;
+		this.power = bullet.getPower();
+		this.heading = bullet.getHeadingRadians();
+		this.time = time;
+		this.velocity = bullet.getVelocity();
+	}
+
 	public void updateDistance(long currentTime) {
 		long timeElapsed = currentTime - time;
 		//A lot of trial and error to get this fudge factor right!

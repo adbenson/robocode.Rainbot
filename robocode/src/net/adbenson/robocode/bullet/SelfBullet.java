@@ -19,10 +19,16 @@ public class SelfBullet extends Bullet {
 	private final OpponentState target;
 	private final int colorIndex;
 	
-	public SelfBullet(SelfState self, long time, OpponentState target) {
-		super(self, self.gunHeading, time);
+	private final robocode.Bullet bullet;
+	
+	public SelfBullet(SelfState self, robocode.Bullet bullet, long time, OpponentState target) {
+		super(self, bullet, time);
 		this.target = target;
 		this.colorIndex = (nextColorIndex++) % COLOR_WHEEL;
+		this.bullet = bullet;
+		
+System.out.println("V:"+this.velocity+","+bullet.getVelocity());
+System.out.println("P:"+this.power+","+bullet.getPower());
 	}
 
 	@Override
@@ -36,9 +42,9 @@ public class SelfBullet extends Bullet {
 		
 		Vector current = Vector.getVectorFromAngle(heading, getDistanceTravelled()).add(origin);
 		
-		origin.drawTo(g, heading, getDistanceTravelled());
+//		origin.drawTo(g, heading, getDistanceTravelled());
 		
-		g.fillOval(current.intX(), current.intY(), 20, 20);
+		g.fillOval(current.intX()-10, current.intY()-10, 20, 20);	
 	}
 
 	@Override

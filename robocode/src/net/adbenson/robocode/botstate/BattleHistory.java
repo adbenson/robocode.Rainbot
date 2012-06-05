@@ -74,10 +74,11 @@ public class BattleHistory extends LinkedList<BattleState> {
 		);
 	}
 
-	public void selfFired(OpponentState candidateTarget) {
+	public void selfFired(OpponentState candidateTarget, robocode.Bullet bullet) {
 		selfBullets.add(
 				new SelfBullet(
 						currentState.self,
+						bullet,
 						currentState.time,
 						candidateTarget
 				)
