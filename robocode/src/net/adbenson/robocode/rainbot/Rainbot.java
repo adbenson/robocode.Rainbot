@@ -3,13 +3,12 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-import java.util.LinkedList;
-import java.util.Map.Entry;
 
 import net.adbenson.robocode.botstate.BattleHistory;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
 import net.adbenson.robocode.prediction.ImpossibleToSeeTheFutureIsException;
+import net.adbenson.robocode.prediction.PredictedTarget;
 import net.adbenson.robocode.prediction.PredictiveTargeting;
 import net.adbenson.robocode.prediction.UnableToTargetPredictionException;
 import net.adbenson.utility.Utility;
@@ -114,14 +113,10 @@ public class Rainbot extends AdvancedRobot {
 	    		if (!ready && this.getGunHeat() <= getGunCoolingRate()) {
 	    			
 					try {
-						LinkedList<OpponentState> opponentPrediction = 
-								predictor.predictTheFuture();
+						PredictedTarget target = predictor.getNewTarget(getPosition());
 
-						Entry<Double, OpponentState> target = 
-								predictor.selectTargetFromPrediction(opponentPrediction);
-
-						requiredFirepower = target.getKey();
-						setGunTurnToTarget(target.getValue());
+						requiredFirepower = target.requiredPower;
+						setGunTurnToTarget(target.target);
 
 						ready = true;
 
