@@ -122,10 +122,8 @@ public class Rainbot extends AdvancedRobot {
 
 					} catch (UnableToTargetPredictionException e) {
 						System.out.println("Predicted target unreachable");
-					} catch (PredictiveStateUnavailableException e) {
-						System.out.println("Not enough history or future to provide prediction");
 					} catch (ImpossibleToSeeTheFutureIsException e) {
-						System.out.println("Impossible to see, the future is.");
+						System.out.println("Impossible to see, the future is. ("+e.getMessage()+")");
 					}
 		    		
 	    			aim = false;

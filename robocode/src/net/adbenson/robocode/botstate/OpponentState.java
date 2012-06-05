@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.LinkedList;
 
-import net.adbenson.robocode.rainbot.Rainbot;
+import net.adbenson.robocode.prediction.PredictiveTargeting;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
@@ -117,7 +117,7 @@ public class OpponentState extends BotState<OpponentState> {
 		g.setColor(Utility.setAlpha(Color.green, 0.4));
 		position.drawTo(g, heading, velocity * 5);
 		
-		float ratio = (float)index / Rainbot.PREDICTIVE_LOOKBEHIND;
+		float ratio = (float)index / PredictiveTargeting.PREDICTIVE_LOOKBEHIND;
 		g.setColor(Color.getHSBColor(ratio, 1f, 1f));		
 		g.fillOval(position.intX(), position.intY(), 3, 3);
 	}

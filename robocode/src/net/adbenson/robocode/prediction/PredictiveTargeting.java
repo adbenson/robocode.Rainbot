@@ -1,9 +1,8 @@
 package net.adbenson.robocode.prediction;
 
 import java.awt.Graphics2D;
+import java.util.Collections;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.TreeMap;
 
 import net.adbenson.robocode.botstate.BattleHistory;
 import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
@@ -40,20 +39,70 @@ public class PredictiveTargeting {
 		return (POWER_RANGE * confidence) + Rules.MIN_BULLET_POWER;
 	}
 	
-	public Map.Entry<Double, OpponentState> selectTargetFromPrediction(LinkedList<OpponentState> prediction) throws UnableToTargetPredictionException {							
+	public PredictedTarget getNewTarget(Vector position) throws UnableToTargetPredictionException, ImpossibleToSeeTheFutureIsException {
+		
+		LinkedList<OpponentState> futureStates = predictTheFuture();
+		
+		LinkedList<PredictedTarget> potentialTargets = 
+				calculateTargets(position, futureStates);
+		
+		if (potentialTargets.isEmpty()) {
+			throw new UnableToTargetPredictionException();
+		}
+		
+		PredictedTarget closestMatch = null;
+		double targetPower = getTargetFirepower();
+		
+		//Get the closest entry with a required power >= targetPower
+		for (PredictedTarget target : potentialTargets) {
+			closestMatch = target;
+			
+			if (target.requiredPower >= targetPower) {
+				break;
+			}
+		}
+		
+		return closestMatch;
+	}
+	
+	private LinkedList<OpponentState> predictTheFuture() throws ImpossibleToSeeTheFutureIsException {
+		OpponentState o = history.getCurrentOpponent();
+		LinkedList<OpponentState> prediction = null;
+
+		long start = System.nanoTime();
+		
+		OpponentState bestMatch = o.matchStateSequence(PREDICTIVE_LOOKBEHIND, predictiveComparator);
+		
+		if (bestMatch == null) {
+			throw new ImpossibleToSeeTheFutureIsException("No suitably matching history found");
+		}
+		
+		try {
+			prediction = o.predictStates(bestMatch, PREDICTIVE_LOOKBEHIND);
+		} catch (PredictiveStateUnavailableException e) {
+			throw new ImpossibleToSeeTheFutureIsException("Insufficient future states to project prediction");
+		}
+		
+		System.out.print("time:"); System.out.format("%,8d", System.nanoTime() - start);
+		System.out.println(" ("+history.getStateCount()+")");
+
+		return prediction;
+	}
+	
+	public LinkedList<PredictedTarget> calculateTargets(Vector botPosition, LinkedList<OpponentState> prediction) throws UnableToTargetPredictionException {							
 		int turnsToPosition = 0;
 		
-		TreeMap<Double, OpponentState> potentialTargets = new TreeMap<Double, OpponentState>();
+		LinkedList<PredictedTarget> potentialTargets = new LinkedList<PredictedTarget>();
 		
 		for(OpponentState target : prediction) {
 			turnsToPosition++;
 						
-			double distance = target.position.distance(position);
+			double distance = target.position.distance(botPosition);
 			double requiredPower = Bullet.getRequiredPower(turnsToPosition, distance);
 		
 			//If the power required is below the minimum, it can't possibly get there in time.
 			if (requiredPower >= Rules.MIN_BULLET_POWER && requiredPower <= Rules.MAX_BULLET_POWER) {
-				potentialTargets.put(requiredPower, target);				
+				potentialTargets.add(new PredictedTarget(requiredPower, target));				
 			}
 		}
 		
@@ -62,57 +111,25 @@ public class PredictiveTargeting {
 			throw new UnableToTargetPredictionException();
 		}
 		
-		//Get the closest entry with a required power >= targetPower
-		Map.Entry<Double, OpponentState> closestMatch = 
-			potentialTargets.ceilingEntry(targetPower);
+		Collections.sort(potentialTargets, PredictedTarget.powerComparator);
 		
-		//If there's none, just take the highest available.
-		if (closestMatch == null) {
-			closestMatch = potentialTargets.lastEntry();
-		}
-		
-		//Store this so we can draw it later
-		candidateTarget = closestMatch.getValue();
-		
-		return closestMatch;
+		return potentialTargets;
 	}
-
-	public LinkedList<OpponentState> predictTheFuture() throws PredictiveStateUnavailableException, ImpossibleToSeeTheFutureIsException {
-		OpponentState o = history.getCurrentOpponent();
-		LinkedList<OpponentState> prediction = null;
-
-		long start = System.nanoTime();
-		
-		OpponentState bestMatch = o.matchStateSequence(PREDICTIVE_LOOKBEHIND, predictiveComparator);
-		
-		if (bestMatch != null) {
-    		prediction = o.predictStates(bestMatch, PREDICTIVE_LOOKBEHIND);
-		}
-		else {
-			throw new ImpossibleToSeeTheFutureIsException();
-		}
-		
-		System.out.print("time:"); System.out.format("%,8d", System.nanoTime() - start);
-		System.out.println(" ("+history.getStateCount()+")");
-
-		return prediction;
+	
+	public OpponentState getTarget() {
+		return candidateTarget;
 	}
-
+	
+	public boolean canPredict(long turn) {
+		return turn > PREDICTIVE_LOOKBEHIND;
+	}
+	
 	public void drawPrediction(Graphics2D g) {
 		if (opponentPrediction != null) { 
 			for(int i=0; i<opponentPrediction.size(); i++) {
 				opponentPrediction.get(i).drawPath(g, i);
 			}
 		}
-	}
-
-	public OpponentState getTarget() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	public boolean canPredict(long turn) {
-		return turn > PREDICTIVE_LOOKBEHIND;
 	}
 
 }
