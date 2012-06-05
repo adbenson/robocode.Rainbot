@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.SelfState;
+import net.adbenson.robocode.rainbot.Rainbot;
 import net.adbenson.utility.Utility;
 
 
@@ -26,8 +27,7 @@ public class SelfBullet extends Bullet {
 
 	@Override
 	public boolean shouldDelete() {
-		// TODO Auto-generated method stub
-		return false;
+		return getDistanceTravelled() > Rainbot.getField().getWidth();
 	}
 
 	@Override
