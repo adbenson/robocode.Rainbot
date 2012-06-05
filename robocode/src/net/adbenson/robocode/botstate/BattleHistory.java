@@ -1,6 +1,4 @@
 package net.adbenson.robocode.botstate;
-import java.util.LinkedList;
-
 import net.adbenson.robocode.bullet.BulletQueue;
 import net.adbenson.robocode.bullet.OpponentBullet;
 import net.adbenson.robocode.bullet.SelfBullet;

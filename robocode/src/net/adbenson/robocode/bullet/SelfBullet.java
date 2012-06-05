@@ -23,9 +23,6 @@ public class SelfBullet extends Bullet {
 		super(self, bullet, time);
 		this.target = target;
 		this.colorIndex = (nextColorIndex++) % COLOR_WHEEL;
-		
-System.out.println("V:"+this.velocity+","+bullet.getVelocity());
-System.out.println("P:"+this.power+","+bullet.getPower());
 	}
 
 	@Override
