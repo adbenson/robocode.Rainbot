@@ -1,8 +1,5 @@
 package net.adbenson.robocode.botstate;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
@@ -104,57 +101,7 @@ public abstract class BotState<T extends BotState<T>> {
 		//Check if the bot's current speed is very low, and it wasn't before
 		return (Math.abs(velocity) < 0.01 && Math.abs(change.velocity) > 0.01);
 	}
-	
-	public T changeOverTurns(int turns) {
-		return changeOverTurns(turns, 0);
-	}
-	
-	public T changeOverTurns(int turns, int start) {
-		//Case 1: we don't need to travel any deeper, start summing
-		if (start <= 0) {
-			
-			//Case 1a: We're only looking for the change over 1 turn 
-			if (turns <= 1) {
-				return change;
-			}
-			//Case 2a: We need to find the sum of this plus t-1 turns
-			else {
-				return sum(turns-1);
-			}
-			
-		}
-		//Case 2: We're not deep enough yet, travel down
-		else {
-			
-			//Case 2a: Don't start summing yet, go at least 1 further
-			if (previous != null) {
-				return previous.changeOverTurns(turns, start - 1);
-			}
-			//Case 2b: Can't go any further. We were asked for more than is available. 
-			else {
-				return null;
-			}
-			
-		}
-	}
-	
-	//Helper method for ChangeOverTurns. It was getting hairy in there
-	private T sum(int turns) {
-		//Assume we'll return 'change', whether it's null or not
-		T changeSum = change;
 		
-		if (change != null && previous != null) {
-			T toAdd = previous.changeOverTurns(turns);
-			
-			//toAdd will return null if previous doesn't have a change history
-			if (toAdd != null) {
-				changeSum = change.sum(toAdd);
-			}
-		}
-		
-		return changeSum;
-	}
-	
 	public T previousState(int n) {
 		if (n <= 1 || previous == null) {
 			return previous;
@@ -162,21 +109,6 @@ public abstract class BotState<T extends BotState<T>> {
 		else {
 			return previous.previousState(n-1); 
 		}
-	}
-	
-	public List<T> previousSubset(int n, int offset) {
-		T state = previousState(offset);
-		LinkedList<T> subset = new LinkedList<T>();
-		
-		for(int i = 1; i <= n; i++) {
-			if (state == null || state.previous == null) {
-				break;
-			}
-			subset.add(state.previous);			
-			state = state.previous;
-		}
-		
-		return subset;
 	}
 	
 	public T matchStateSequence(int turnsToMatch, StateMatchComparator<T> compare) {
