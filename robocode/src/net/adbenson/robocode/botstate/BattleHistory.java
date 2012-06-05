@@ -5,7 +5,6 @@ import net.adbenson.robocode.bullet.SelfBullet;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
-@SuppressWarnings("serial")
 public class BattleHistory {
 	
 	private BulletQueue<OpponentBullet> opponentBullets;
