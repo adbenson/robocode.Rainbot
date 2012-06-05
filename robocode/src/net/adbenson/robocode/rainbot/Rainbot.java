@@ -6,11 +6,10 @@ import java.awt.geom.Rectangle2D;
 
 import net.adbenson.robocode.botstate.BattleHistory;
 import net.adbenson.robocode.botstate.OpponentState;
-import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
 import net.adbenson.robocode.prediction.ImpossibleToSeeTheFutureIsException;
 import net.adbenson.robocode.prediction.PredictedTarget;
 import net.adbenson.robocode.prediction.PredictiveTargeting;
-import net.adbenson.robocode.prediction.UnableToTargetPredictionException;
+import net.adbenson.robocode.prediction.TargetOutOfRangeException;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
@@ -120,7 +119,7 @@ public class Rainbot extends AdvancedRobot {
 
 						ready = true;
 
-					} catch (UnableToTargetPredictionException e) {
+					} catch (TargetOutOfRangeException e) {
 						System.out.println("Predicted target unreachable");
 					} catch (ImpossibleToSeeTheFutureIsException e) {
 						System.out.println("Impossible to see, the future is. ("+e.getMessage()+")");
@@ -295,9 +294,7 @@ System.out.println("Firing@"+power);
 		return field;
 	}
 			
-	class RoundStatus {
-		int bulletCount = 0;
-		
+	class RoundStatus {		
 		boolean hitByOpponent;
 		boolean hitToOpponent;
 		boolean collidedWithWall;
@@ -314,15 +311,5 @@ System.out.println("Firing@"+power);
 			collidedWithOpponent = false;
 			opponentEnergyDrop = false;
 		}
-	}
-
-	private class Target {
-		public final double power;
-		public final double bearing;
-		public Target(double power, double bearing) {
-			this.power = power;
-			this.bearing = bearing;
-		}
-	}
-	
+	}	
 }

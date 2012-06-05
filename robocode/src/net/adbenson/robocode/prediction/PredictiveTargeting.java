@@ -15,7 +15,7 @@ import robocode.Rules;
 public class PredictiveTargeting {
 	
 
-	public static final int PREDICTIVE_LOOKBEHIND = 100;
+	public static final int PREDICTION_LOOKBEHIND = 100;
 	
 	public static final double INITIAL_CONFIDENCE = 0.5;
 	
@@ -39,7 +39,7 @@ public class PredictiveTargeting {
 		return (POWER_RANGE * confidence) + Rules.MIN_BULLET_POWER;
 	}
 	
-	public PredictedTarget getNewTarget(Vector position) throws UnableToTargetPredictionException, ImpossibleToSeeTheFutureIsException {
+	public PredictedTarget getNewTarget(Vector position) throws TargetOutOfRangeException, ImpossibleToSeeTheFutureIsException {
 		
 		LinkedList<OpponentState> futureStates = predictTheFuture();
 		
@@ -47,7 +47,7 @@ public class PredictiveTargeting {
 				calculateTargets(position, futureStates);
 		
 		if (potentialTargets.isEmpty()) {
-			throw new UnableToTargetPredictionException();
+			throw new TargetOutOfRangeException();
 		}
 		
 		PredictedTarget closestMatch = null;
@@ -71,14 +71,14 @@ public class PredictiveTargeting {
 
 		long start = System.nanoTime();
 		
-		OpponentState bestMatch = o.matchStateSequence(PREDICTIVE_LOOKBEHIND, predictiveComparator);
+		OpponentState bestMatch = o.matchStateSequence(PREDICTION_LOOKBEHIND, predictiveComparator);
 		
 		if (bestMatch == null) {
 			throw new ImpossibleToSeeTheFutureIsException("No suitably matching history found");
 		}
 		
 		try {
-			prediction = o.predictStates(bestMatch, PREDICTIVE_LOOKBEHIND);
+			prediction = o.predictStates(bestMatch, PREDICTION_LOOKBEHIND);
 		} catch (PredictiveStateUnavailableException e) {
 			throw new ImpossibleToSeeTheFutureIsException("Insufficient future states to project prediction");
 		}
@@ -89,7 +89,7 @@ public class PredictiveTargeting {
 		return prediction;
 	}
 	
-	public LinkedList<PredictedTarget> calculateTargets(Vector botPosition, LinkedList<OpponentState> prediction) throws UnableToTargetPredictionException {							
+	public LinkedList<PredictedTarget> calculateTargets(Vector botPosition, LinkedList<OpponentState> prediction) throws TargetOutOfRangeException {							
 		int turnsToPosition = 0;
 		
 		LinkedList<PredictedTarget> potentialTargets = new LinkedList<PredictedTarget>();
@@ -101,14 +101,15 @@ public class PredictiveTargeting {
 			double requiredPower = Bullet.getRequiredPower(turnsToPosition, distance);
 		
 			//If the power required is below the minimum, it can't possibly get there in time.
-			if (requiredPower >= Rules.MIN_BULLET_POWER && requiredPower <= Rules.MAX_BULLET_POWER) {
+			if (requiredPower >= Rules.MIN_BULLET_POWER && 
+					requiredPower <= Rules.MAX_BULLET_POWER) {
 				potentialTargets.add(new PredictedTarget(requiredPower, target));				
 			}
 		}
 		
 		//If nothing is added to the list, nothing is in range.
 		if (potentialTargets.isEmpty()) {
-			throw new UnableToTargetPredictionException();
+			throw new TargetOutOfRangeException();
 		}
 		
 		Collections.sort(potentialTargets, PredictedTarget.powerComparator);
@@ -121,7 +122,7 @@ public class PredictiveTargeting {
 	}
 	
 	public boolean canPredict(long turn) {
-		return turn > PREDICTIVE_LOOKBEHIND;
+		return turn > PREDICTION_LOOKBEHIND;
 	}
 	
 	public void drawPrediction(Graphics2D g) {

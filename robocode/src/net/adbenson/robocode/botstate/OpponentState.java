@@ -117,7 +117,7 @@ public class OpponentState extends BotState<OpponentState> {
 		g.setColor(Utility.setAlpha(Color.green, 0.4));
 		position.drawTo(g, heading, velocity * 5);
 		
-		float ratio = (float)index / PredictiveTargeting.PREDICTIVE_LOOKBEHIND;
+		float ratio = (float)index / PredictiveTargeting.PREDICTION_LOOKBEHIND;
 		g.setColor(Color.getHSBColor(ratio, 1f, 1f));		
 		g.fillOval(position.intX(), position.intY(), 3, 3);
 	}
