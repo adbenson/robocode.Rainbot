@@ -11,6 +11,8 @@ import net.adbenson.utility.Vector;
 
 public class OpponentBullet extends Bullet {
 	
+	private static final double TIME_FUDGE = 2.1;
+	
 	private Ellipse2D radius;
 
 	public OpponentBullet(OpponentState opponent, long time) {
@@ -19,6 +21,10 @@ public class OpponentBullet extends Bullet {
 
 	public Ellipse2D getBulletRadius() {
 		return radius;
+	}
+	
+	public double calculateDistanceTravelled(long time) {
+		return velocity * (time + TIME_FUDGE);
 	}
 
 	@Override

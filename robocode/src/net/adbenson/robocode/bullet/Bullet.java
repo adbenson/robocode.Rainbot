@@ -7,8 +7,6 @@ import net.adbenson.utility.Vector;
 
 public abstract class Bullet {
 	
-	private static final double TIME_FUDGE = 2.1;
-	
 	public final BotState<?> bot;
 	
 	public final Vector origin;
@@ -17,7 +15,7 @@ public abstract class Bullet {
 	public final long time;
 	public final double velocity;
 	
-	private double distanceTravelled;
+	protected double distanceTravelled;
 	
 	public Bullet(BotState<?> bot, double heading, long time) {
 		this.bot = bot;
@@ -31,9 +29,13 @@ public abstract class Bullet {
 	public void updateDistance(long currentTime) {
 		long timeElapsed = currentTime - time;
 		//A lot of trial and error to get this fudge factor right!
-		distanceTravelled = velocity * (timeElapsed + TIME_FUDGE);
+		distanceTravelled = calculateDistanceTravelled(timeElapsed);
 		
 		updateProjection();
+	}
+	
+	public double calculateDistanceTravelled(long time) {
+		return velocity * time;
 	}
 
 	private double velocity() {
@@ -45,7 +47,7 @@ public abstract class Bullet {
 	}
 	
 	public static double getRequiredPower(int turns, double distance) {
-		return (20.0 - (distance / (turns + TIME_FUDGE))) / 3.0;
+		return (20.0 - (distance / turns)) / 3.0;
 	}
     
     public double getDistanceTravelled() {
