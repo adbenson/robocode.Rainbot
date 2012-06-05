@@ -198,7 +198,7 @@ public abstract class BotState<T extends BotState<T>> {
 			try {
 				difference = compareStates(reference, test, turnsToMatch, compare);
 			} catch (StateComparisonUnavailableException e) {
-//				System.out.println("Reached earliest state");
+				//Reached earliest avaialble state
 				break testStates;
 			}
 					
@@ -207,8 +207,6 @@ public abstract class BotState<T extends BotState<T>> {
 				bestMatch = test;
 				bestMatchDifference = difference;		
 			}
-						
-//			System.out.println("Best predictive match: "+bestMatchDifference);
 			
 			if (difference <= PREDICTIVE_MATCH_SHORTCUT_THRESHOLD) {
 				System.out.println("Prediction threshold met. Shortcutting.");
