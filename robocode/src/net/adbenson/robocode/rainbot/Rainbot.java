@@ -28,26 +28,27 @@ import robocode.util.Utils;
 
 public class Rainbot extends AdvancedRobot {
 	
+	public static final int PREDICTIVE_LOOKBEHIND = 100;
+	public static final double TARGET_FIREPOWER = 1;
+	
 	public static final double MAX_TURN = Math.PI / 5d;
+
 	
 	private BattleHistory history;
 	
-	private Status status;
+	private RoundStatus status;
 	
 	private int preferredDirection;
 	
 	private static Rectangle2D field;
 	private Rectangle2D safety;
-	private double preferredDistance;
 	
-	public static final int PREDICTIVE_LOOKBEHIND = 100;
+	private double preferredDistance;
+
 	private StateMatchComparator<OpponentState> predictiveComparator;
 	
 	private LinkedList<OpponentState> opponentPrediction;
-	
 	private OpponentState candidateTarget;
-	
-	private double TARGET_FIREPOWER = 1;
 	
 	private boolean opponentAlive;
 	
@@ -58,7 +59,7 @@ public class Rainbot extends AdvancedRobot {
 		
 		history = new BattleHistory();
 			
-		status = new Status();	
+		status = new RoundStatus();	
 		
 		preferredDirection = 1;
 		
@@ -359,7 +360,7 @@ System.out.println("Firing@"+power);
 		return field;
 	}
 			
-	class Status {
+	class RoundStatus {
 		int bulletCount = 0;
 		
 		boolean hitByOpponent;
@@ -368,7 +369,7 @@ System.out.println("Firing@"+power);
 		boolean collidedWithOpponent;
 		boolean opponentEnergyDrop;
 		
-		public Status() {
+		public RoundStatus() {
 			reset();
 		}
 		public void reset() {
