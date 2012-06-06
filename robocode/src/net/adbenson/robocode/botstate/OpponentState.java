@@ -119,19 +119,25 @@ public class OpponentState extends BotState<OpponentState> {
 		
 		float ratio = (float)index / PredictiveTargeting.PREDICTION_LOOKBEHIND;
 		g.setColor(Color.getHSBColor(ratio, 1f, 1f));		
-		g.fillOval(position.intX(), position.intY(), 3, 3);
+		g.fillOval(position.intX()-1, position.intY()-1, 2, 2);
 	}
 
-	public void draw(Graphics2D g) {
-		g.setColor(Utility.setAlpha(Color.orange, 0.6));
+	public void drawTarget(Graphics2D g) {
+		g.setStroke(new BasicStroke(1));
+		g.setColor(Utility.setAlpha(Color.red, 0.9));
 		Utility.drawCrosshairs(g, position, 40, 50);
 		
-		g.setColor(Utility.setAlpha(Color.pink, 0.6));
+		g.setColor(Utility.setAlpha(Color.pink, 0.4));
 		
 		position.drawTo(g, Utility.oppositeAngle(absoluteBearing), distance / 2);
 	}
 	
 	@SuppressWarnings("serial")
 	public class PredictiveStateUnavailableException extends Exception {}
+
+	public void drawHighlight(Graphics2D g) {
+		g.setColor(Utility.setAlpha(Color.white, 0.6));	
+		g.fillOval(position.intX()-3, position.intY()-3, 6, 6);
+	}
 
 }

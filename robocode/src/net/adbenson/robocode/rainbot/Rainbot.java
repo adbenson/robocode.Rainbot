@@ -66,7 +66,7 @@ public class Rainbot extends AdvancedRobot {
 		
 		opponentAlive = true;
 		
-		preferredDistance = new Vector(field).magnitude() / 2;
+		preferredDistance = new Vector(field).magnitude() / 2;		
 		
 		setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(true);
@@ -141,7 +141,7 @@ public class Rainbot extends AdvancedRobot {
 	
 	private void generateBoundries() {
 		Vector botSize = new Vector(getWidth(), getHeight());
-		
+	
 		field = new Rectangle2D.Double(
 				(botSize.x/2)+1, (botSize.y/2)+1, 
 				getBattleFieldWidth()-(botSize.x-2), getBattleFieldHeight()-(botSize.y-2)
@@ -149,7 +149,7 @@ public class Rainbot extends AdvancedRobot {
 		safety = new Rectangle2D.Double(
 				botSize.x, botSize.y, 
 				getBattleFieldWidth()-(botSize.x*2), getBattleFieldHeight()-(botSize.y*2)
-		);		
+		);
 	}
 
 	private void setGunTurnToTarget(OpponentState target) {
@@ -256,7 +256,7 @@ System.out.println("Firing@"+power);
 			history.getOpponentBullets().draw(g);
 			history.getSelfBullets().draw(g);
 			
-			history.getCurrentState().opponent.draw(g);
+			history.getCurrentState().opponent.drawTarget(g);
 			
 			history.getCurrentState().self.draw(g);
 		}
