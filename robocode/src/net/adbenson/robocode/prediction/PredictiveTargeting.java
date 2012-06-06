@@ -14,7 +14,8 @@ import robocode.Rules;
 
 public class PredictiveTargeting {
 	
-	public static final int PREDICTION_LOOKBEHIND = 20;
+	public static final int PREDICTION_LOOKBEHIND = 25;
+	public static final int PREDICTION_LOOKAHEAD = 50;
 	
 	public static final double PREDICTION_CONFIDENCE_SHIFT = 0.07;
 	
@@ -79,10 +80,6 @@ public class PredictiveTargeting {
 		
 		opponentPrediction = calculateTargets(position, futureStates);
 		
-		if (opponentPrediction.isEmpty()) {
-			throw new TargetOutOfRangeException();
-		}
-		
 		PredictedTarget target = selectBestTarget(opponentPrediction);
 		candidateTarget = target.target;
 		
@@ -135,7 +132,7 @@ public class PredictiveTargeting {
 
 		long start = System.nanoTime();
 		
-		OpponentState bestMatch = o.matchStateSequence(PREDICTION_LOOKBEHIND, predictiveComparator);
+		OpponentState bestMatch = o.matchStateSequence(PREDICTION_LOOKBEHIND, PREDICTION_LOOKAHEAD, predictiveComparator);
 		
 		if (bestMatch == null) {
 			throw new ImpossibleToSeeTheFutureIsException("No suitably matching history found");
@@ -163,7 +160,7 @@ public class PredictiveTargeting {
 						
 			double distance = target.position.distance(botPosition);
 			double requiredPower = Bullet.getRequiredPower(turnsToPosition, distance);
-		
+System.out.println("T:"+turnsToPosition+", D:"+distance);		
 			//If the power required is below the minimum, it can't possibly get there in time.
 			if (requiredPower >= Rules.MIN_BULLET_POWER && 
 					requiredPower <= Rules.MAX_BULLET_POWER) {
@@ -184,7 +181,7 @@ public class PredictiveTargeting {
 	}
 	
 	public boolean canPredict(long turn) {
-		return turn > PREDICTION_LOOKBEHIND;
+		return turn > PREDICTION_LOOKBEHIND + PREDICTION_LOOKAHEAD;
 	}
 	
 	public void drawPrediction(Graphics2D g) {

@@ -111,12 +111,12 @@ public abstract class BotState<T extends BotState<T>> {
 		}
 	}
 	
-	public T matchStateSequence(int turnsToMatch, StateMatchComparator<T> compare) {
+	public T matchStateSequence(int turnsToMatch, int lookahead, StateMatchComparator<T> compare) {
 		//Initialize the first reference state
 		@SuppressWarnings("unchecked")
 		T reference = (T) this;
-		//Find the first match candidate
-		T test = previousState(turnsToMatch);
+		//Find the first match candidate - far enough into history that there's enough to replicate
+		T test = previousState(lookahead);
 		
 		//Initialize the bestMatch and best comparison
 		T bestMatch = null;
