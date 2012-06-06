@@ -23,8 +23,7 @@ public class PredictedTarget {
 
 		@Override
 		public int compare(PredictedTarget o1, PredictedTarget o2) {
-			// TODO Auto-generated method stub
-			return 0;
+			return Double.compare(o1.requiredPower, o2.requiredPower);
 		}
 		
 	}
@@ -33,8 +32,7 @@ public class PredictedTarget {
 
 		@Override
 		public int compare(PredictedTarget o1, PredictedTarget o2) {
-			// TODO Auto-generated method stub
-			return 0;
+			return o1.turnsToPosition - o2.turnsToPosition;
 		}
 		
 	}
