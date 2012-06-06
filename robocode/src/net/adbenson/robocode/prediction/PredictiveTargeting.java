@@ -32,6 +32,10 @@ public class PredictiveTargeting {
 
 	private static final double LOW_CONFIDENCE_POWER_LIMIT = 0.15;
 	
+	//Gives a non-linear scale of confidence to firepower, preferring low firepower.
+	//(Higher give steeper slope, 1 gives linear scale
+	public static final double CONFIDENCE_FIREPOWER_EXP = 2.5;
+	
 	private final double POWER_RANGE = Rules.MAX_BULLET_POWER - Rules.MIN_BULLET_POWER;
 	
 	private BattleState history;
@@ -86,7 +90,7 @@ public class PredictiveTargeting {
 	}
 	
 	private double getTargetFirepower(double confidence) {
-		return (POWER_RANGE * confidence) + Rules.MIN_BULLET_POWER;
+		return Math.pow((POWER_RANGE * confidence), CONFIDENCE_FIREPOWER_EXP) + Rules.MIN_BULLET_POWER;
 	}
 	
 	public PredictedTarget getNewTarget(Vector position) throws TargetOutOfRangeException, ImpossibleToSeeTheFutureIsException {
