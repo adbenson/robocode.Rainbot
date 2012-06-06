@@ -14,7 +14,7 @@ import robocode.Rules;
 
 public class PredictiveTargeting {
 	
-	public static final int PREDICTION_LOOKBEHIND = 100;
+	public static final int PREDICTION_LOOKBEHIND = 20;
 	
 	public static final double PREDICTION_CONFIDENCE_SHIFT = 0.07;
 	
@@ -28,7 +28,7 @@ public class PredictiveTargeting {
 	
 	private StateMatchComparator<OpponentState> predictiveComparator;
 	
-	private LinkedList<OpponentState> opponentPrediction;
+	private LinkedList<PredictedTarget> opponentPrediction;
 	private OpponentState candidateTarget;
 	
 	private int hits;
@@ -46,10 +46,10 @@ public class PredictiveTargeting {
 	
 
 	private double getConfidence() {
-		//Until we have some hits and misses, we have no confidence.
-		if (hits == 0 && misses == 0) {
-			return 0;
-		}
+//		//Until we have some hits and misses, we have no confidence.
+//		if (hits == 0 && misses == 0) {
+//			return 0;
+//		}
 		//If we've only ever hit, we're very confident
 		if (hits > 1 && misses == 0) {
 			return 1;
@@ -77,14 +77,16 @@ public class PredictiveTargeting {
 		
 		LinkedList<OpponentState> futureStates = predictTheFuture();
 		
-		LinkedList<PredictedTarget> potentialTargets = 
-				calculateTargets(position, futureStates);
+		opponentPrediction = calculateTargets(position, futureStates);
 		
-		if (potentialTargets.isEmpty()) {
+		if (opponentPrediction.isEmpty()) {
 			throw new TargetOutOfRangeException();
 		}
 		
-		return selectBestTarget(potentialTargets);
+		PredictedTarget target = selectBestTarget(opponentPrediction);
+		candidateTarget = target.target;
+		
+		return target;
 	}
 	
 	private PredictedTarget selectBestTarget(LinkedList<PredictedTarget> targets) throws ImpossibleToSeeTheFutureIsException{
@@ -188,7 +190,7 @@ public class PredictiveTargeting {
 	public void drawPrediction(Graphics2D g) {
 		if (opponentPrediction != null) { 
 			for(int i=0; i<opponentPrediction.size(); i++) {
-				opponentPrediction.get(i).drawPath(g, i);
+				opponentPrediction.get(i).target.drawPath(g, i);
 			}
 		}
 	}
