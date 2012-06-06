@@ -17,7 +17,7 @@ public class PredictiveTargeting {
 	//Lookbehind determines how many past states the bot will attempt to match before making a prediction.
 	//A high value will generally be more accurate, but more prone to wildly false predictions against random enemies.
 	//A higher value will also put a higher load on the processor and increase the time before the first lock.
-	public static final int PREDICTION_LOOKBEHIND = 25;
+	public static final int PREDICTION_LOOKBEHIND = 50;
 	
 	//Lookahead determines how far into the future the bot will predict it's opponents movements.
 	//It also determines how far away the bot can target;
@@ -34,7 +34,7 @@ public class PredictiveTargeting {
 	
 	//Gives a non-linear scale of confidence to firepower, preferring low firepower.
 	//(Higher give steeper slope, 1 gives linear scale
-	public static final double CONFIDENCE_FIREPOWER_EXP = 2.5;
+	public static final double CONFIDENCE_FIREPOWER_EXP = 4;
 	
 	private final double POWER_RANGE = Rules.MAX_BULLET_POWER - Rules.MIN_BULLET_POWER;
 	
@@ -90,7 +90,7 @@ public class PredictiveTargeting {
 	}
 	
 	private double getTargetFirepower(double confidence) {
-		return Math.pow((POWER_RANGE * confidence), CONFIDENCE_FIREPOWER_EXP) + Rules.MIN_BULLET_POWER;
+		return (POWER_RANGE * Math.pow(confidence, CONFIDENCE_FIREPOWER_EXP)) + Rules.MIN_BULLET_POWER;
 	}
 	
 	public PredictedTarget getNewTarget(Vector position) throws TargetOutOfRangeException, ImpossibleToSeeTheFutureIsException {
