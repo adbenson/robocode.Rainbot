@@ -14,10 +14,19 @@ import robocode.Rules;
 
 public class PredictiveTargeting {
 	
+	//Lookbehind determines how many past states the bot will attempt to match before making a prediction.
+	//A high value will generally be more accurate, but more prone to wildly false predictions against random enemies.
+	//A higher value will also put a higher load on the processor and increase the time before the first lock.
 	public static final int PREDICTION_LOOKBEHIND = 25;
-	public static final int PREDICTION_LOOKAHEAD = 50;
 	
-	public static final double PREDICTION_CONFIDENCE_SHIFT = 0.07;
+	//Lookahead determines how far into the future the bot will predict it's opponents movements.
+	//It also determines how far away the bot can target;
+	//If it's too short, there won't be enough time for bullet travel.
+	//Approx. 50 is enough to target the far corner of the field.
+	//Recommend around 38 to target 75% of the field.
+	public static final int PREDICTION_LOOKAHEAD = 38;
+	
+	public static final double PREDICTION_CONFIDENCE_SHIFT = 0.05;
 	
 	public static final int LOW_CONFIDENCE_TURN_THRESHOLD = 5;
 
@@ -29,8 +38,9 @@ public class PredictiveTargeting {
 	
 	private StateMatchComparator<OpponentState> predictiveComparator;
 	
-	private LinkedList<PredictedTarget> opponentPrediction;
-	private OpponentState candidateTarget;
+	private LinkedList<OpponentState> predictedTargets;
+	private LinkedList<PredictedTarget> viableTargets;
+	private OpponentState selectedTarget;
 	
 	private int hits;
 	private int misses;
@@ -53,19 +63,24 @@ public class PredictiveTargeting {
 //		}
 		//If we've only ever hit, we're very confident
 		if (hits > 1 && misses == 0) {
+			System.out.println("PERFECT RECORD! Very confident!");
 			return 1;
 		}
 		
-		int turns = history.getStateCount();
-		double comparableHistories = turns / PREDICTION_LOOKBEHIND;
+		double turns = history.getStateCount();
+		double historyRatio = turns / PREDICTION_LOOKBEHIND;
 		
 		//If we have insufficient historical data, we have no confidence
-		if (comparableHistories < 2) {
+		if (historyRatio < 2) {
 			return 0;
 		}
 		
+		double historyFactor = historyRatio * PREDICTION_CONFIDENCE_SHIFT;
+		
 		//Increase confidence with accuracy and good history
-		double confidence = accuracy + (comparableHistories * PREDICTION_CONFIDENCE_SHIFT);
+		double confidence = (accuracy / 2) + historyFactor;
+		
+		System.out.println("Confidence score:"+confidence+" ("+accuracy+" accuracy, "+historyFactor+" history factor)");
 		
 		return Math.min(1, confidence);		
 	}
@@ -76,19 +91,19 @@ public class PredictiveTargeting {
 	
 	public PredictedTarget getNewTarget(Vector position) throws TargetOutOfRangeException, ImpossibleToSeeTheFutureIsException {
 		
-		LinkedList<OpponentState> futureStates = predictTheFuture();
+		predictedTargets = predictTheFuture();
 		
-		opponentPrediction = calculateTargets(position, futureStates);
+		viableTargets = calculateTargets(position, predictedTargets);
 		
-		PredictedTarget target = selectBestTarget(opponentPrediction);
-		candidateTarget = target.target;
+		PredictedTarget target = selectBestTarget(viableTargets);
+		selectedTarget = target.target;
 		
 		return target;
 	}
 	
 	private PredictedTarget selectBestTarget(LinkedList<PredictedTarget> targets) throws ImpossibleToSeeTheFutureIsException{
 		double confidence = getConfidence();
-		
+				
 		if (confidence <= 0) {
 			//If confidence is very low, only shoot if the closest target requires little power.
 			Collections.sort(targets, PredictedTarget.turnsComparator);
@@ -113,7 +128,7 @@ public class PredictiveTargeting {
 		
 		//Otherwise, try to find the target power level
 		double targetPower = getTargetFirepower(confidence);
-		
+System.out.println("Target Firepower: "+targetPower);		
 		//Get the closest entry with a required power >= targetPower
 		PredictedTarget closestMatch = null;
 		for (PredictedTarget target : targets) {
@@ -160,7 +175,7 @@ public class PredictiveTargeting {
 						
 			double distance = target.position.distance(botPosition);
 			double requiredPower = Bullet.getRequiredPower(turnsToPosition, distance);
-System.out.println("T:"+turnsToPosition+", D:"+distance);		
+	
 			//If the power required is below the minimum, it can't possibly get there in time.
 			if (requiredPower >= Rules.MIN_BULLET_POWER && 
 					requiredPower <= Rules.MAX_BULLET_POWER) {
@@ -177,7 +192,7 @@ System.out.println("T:"+turnsToPosition+", D:"+distance);
 	}
 	
 	public OpponentState getTarget() {
-		return candidateTarget;
+		return selectedTarget;
 	}
 	
 	public boolean canPredict(long turn) {
@@ -185,9 +200,12 @@ System.out.println("T:"+turnsToPosition+", D:"+distance);
 	}
 	
 	public void drawPrediction(Graphics2D g) {
-		if (opponentPrediction != null) { 
-			for(int i=0; i<opponentPrediction.size(); i++) {
-				opponentPrediction.get(i).target.drawPath(g, i);
+		if (viableTargets != null) { 
+			for(PredictedTarget target : viableTargets) {
+				target.target.drawHighlight(g);
+			}
+			for(int i=0; i<predictedTargets.size(); i++) {
+				predictedTargets.get(i).drawPath(g, i);
 			}
 		}
 	}
