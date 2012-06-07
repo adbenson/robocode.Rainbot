@@ -136,7 +136,7 @@ public abstract class BotState<T extends BotState<T>> {
 			try {
 				difference = compareStates(reference, test, turnsToMatch, compare);
 			} catch (StateComparisonUnavailableException e) {
-				//Reached earliest avaialble state
+				//Reached earliest available state
 				break testStates;
 			}
 					
