@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 
 import net.adbenson.utility.Utility;
+
 import robocode.AdvancedRobot;
 
 public class SelfState extends BotState<SelfState> {
@@ -27,7 +28,7 @@ public class SelfState extends BotState<SelfState> {
 
 	public SelfState(AdvancedRobot self, SelfState previous) {
 		super(self, previous);
-		this.gunHeading = self.getGunHeadingRadians();
+		this.gunHeading = self.getGunHeading();
 		this.gunHeat = self.getGunHeat();
 	}
 
