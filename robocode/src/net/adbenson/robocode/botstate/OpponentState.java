@@ -21,18 +21,22 @@ public class OpponentState extends BotState<OpponentState> {
 	private boolean shotBySelf;
 	private boolean collidedWithSelf;
 	
-	private boolean alive = true;
+	private boolean alive;
 	
+	//Full constructor. Specify all the fields
 	public OpponentState(
 			String name, double energy, double heading, double velocity, 
 			Vector position, OpponentState previous, 
-			double bearing, double absoluteBearing, double distance, long turn) {
+			double bearing, double absoluteBearing, double distance, 
+			long turn, boolean alive) {
 		super(name, energy, heading, velocity, position, previous, turn);
 		this.bearing = bearing;
 		this.absoluteBearing = absoluteBearing;
 		this.distance = distance;
+		this.alive = alive;
 	}
 	
+	//Difference constructor. Used for constructing Change states
 	public OpponentState(OpponentState a, OpponentState b, boolean add) {
 		super(a, b, add);
 		
@@ -45,10 +49,13 @@ public class OpponentState extends BotState<OpponentState> {
 		this.distance = a.distance + (add? b.distance : -b.distance);
 	}
 
+	//Initial constructor, used when no previous state is known.
 	public OpponentState(ScannedRobotEvent event, AdvancedRobot self) {
 		this(event, null, self);
+		alive = true;
 	}
 
+	//Subsequent constructor. Used to create all new states after the first
 	public OpponentState(ScannedRobotEvent current, OpponentState previous, AdvancedRobot self) {		
 		super(
 				current.getName(),
@@ -63,6 +70,7 @@ public class OpponentState extends BotState<OpponentState> {
 		this.bearing = current.getBearingRadians();
 		this.absoluteBearing = absoluteBearing(self, current);
 		this.distance = current.getDistance();
+		this.alive = previous.alive; //What is dead can never die
 	}	
 
 	private static Vector calculatePosition(ScannedRobotEvent current, AdvancedRobot self) {
@@ -96,7 +104,7 @@ public class OpponentState extends BotState<OpponentState> {
 					"Prediction", energy, newHeading, newVelocity,
 					newPosition, nextState,
 					0, 0, 0,
-					-1
+					-1, false
 			);
 			nextStates.add(nextState);
 			
@@ -194,19 +202,14 @@ public class OpponentState extends BotState<OpponentState> {
 		shotBySelf = true;
 	}
 	
-	public void resetStatus() {
-		shotBySelf = false;
-		collidedWithSelf = false;
+	public void collidedWithSelf() {
+		collidedWithSelf = true;
 	}
 	
 	public boolean collidedWithWall() {
 		boolean offField = !Rainbot.getField().contains(position.toPoint());
 		boolean stopped = stopped();
 		return  offField && stopped;
-	}
-
-	public void collidedWithSelf() {
-		collidedWithSelf = true;
 	}
 
 }
