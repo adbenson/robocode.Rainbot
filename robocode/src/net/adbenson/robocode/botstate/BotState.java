@@ -1,5 +1,8 @@
 package net.adbenson.robocode.botstate;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.text.DecimalFormat;
 
 import net.adbenson.robocode.prediction.PredictiveTargeting;
@@ -10,12 +13,15 @@ import robocode.ScannedRobotEvent;
 
 public abstract class BotState<T extends BotState<T>> {
 	
+	public static final double INITIAL_GUN_HEAT = 3.0;
+	
 	public final String name;
 	public final double energy;
 	public final double heading;
 	public final double velocity;
 	public final Vector position;
 	public final double turn;
+	public double gunHeat;
 	
 	public final T previous;
 	private T next;
@@ -24,10 +30,12 @@ public abstract class BotState<T extends BotState<T>> {
 	@SuppressWarnings("unchecked")
 	protected BotState(
 			String name, 
-			double energy, double heading, double velocity, 
-			Vector position, T previous, double turn) {
+			double energy, double gunHeat, double heading, 
+			double velocity, Vector position, 
+			T previous, double turn) {
 		this.name = name;
 		this.energy = energy;
+		this.gunHeat = gunHeat;
 		this.heading = heading;
 		this.velocity = velocity;
 		this.position = position;
@@ -51,6 +59,8 @@ public abstract class BotState<T extends BotState<T>> {
 				
 				a.energy + (add? b.energy : -b.energy),
 				
+				a.gunHeat + (add? b.gunHeat : -b.gunHeat),
+				
 				(add? a.heading + b.heading : 
 						Utility.angleDifference(a.heading, b.heading)),
 						
@@ -67,6 +77,7 @@ public abstract class BotState<T extends BotState<T>> {
 		this(
 			bot.getName(),
 			bot.getEnergy(),
+			INITIAL_GUN_HEAT,
 			bot.getHeadingRadians(),
 			bot.getVelocity(),
 			position,
@@ -79,6 +90,7 @@ public abstract class BotState<T extends BotState<T>> {
 		this(
 				bot.getName(),
 				bot.getEnergy(),
+				bot.getGunHeat(),
 				bot.getHeadingRadians(),
 				bot.getVelocity(),
 				new Vector(bot.getX(), bot.getY()),
@@ -126,7 +138,7 @@ public abstract class BotState<T extends BotState<T>> {
 		
 		//Initialize the bestMatch and best comparison
 		T bestMatch = null;
-		double bestMatchDifference = Integer.MAX_VALUE;
+		double bestMatchDifference = Double.POSITIVE_INFINITY;
 		
 		//Start looping through test states
 		testStates:
@@ -136,7 +148,9 @@ public abstract class BotState<T extends BotState<T>> {
 			try {
 				difference = compareStates(reference, test, turnsToMatch, compare);
 			} catch (StateComparisonUnavailableException e) {
-				//Reached earliest available state
+				if (bestMatchDifference == Double.POSITIVE_INFINITY) {
+					System.out.println("Ran out of comparison states before one was matched.");
+				}
 				break testStates;
 			}
 					
@@ -183,6 +197,24 @@ public abstract class BotState<T extends BotState<T>> {
 	
 	public interface StateMatchComparator<U extends BotState<U>> {
 		public double compare(U test, U reference) throws StateComparisonUnavailableException;
+	}
+	
+	public void drawGunHeat(Graphics2D g) {
+		g.setStroke(new BasicStroke(4));
+		
+		g.setColor(Color.blue);
+		g.drawLine(
+				position.intX() - 30, position.intY() - 30, 
+				position.intX() - 30, position.intY()
+		);		
+		
+		if (gunHeat > 0) {
+		g.setColor(Color.red);
+			g.drawLine(
+					position.intX() - 30, position.intY() - 30, 
+					position.intX() - 30, (position.intY() - 30) + (int)((gunHeat / 1.6) * 30)
+			);
+		}
 	}
 
 }

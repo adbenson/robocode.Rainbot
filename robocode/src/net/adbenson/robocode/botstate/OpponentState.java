@@ -25,11 +25,12 @@ public class OpponentState extends BotState<OpponentState> {
 	
 	//Full constructor. Specify all the fields
 	public OpponentState(
-			String name, double energy, double heading, double velocity, 
+			String name, double energy, double gunHeat,
+			double heading, double velocity, 
 			Vector position, OpponentState previous, 
 			double bearing, double absoluteBearing, double distance, 
 			long turn, boolean alive) {
-		super(name, energy, heading, velocity, position, previous, turn);
+		super(name, energy, gunHeat, heading, velocity, position, previous, turn);
 		this.bearing = bearing;
 		this.absoluteBearing = absoluteBearing;
 		this.distance = distance;
@@ -52,7 +53,6 @@ public class OpponentState extends BotState<OpponentState> {
 	//Initial constructor, used when no previous state is known.
 	public OpponentState(ScannedRobotEvent event, AdvancedRobot self) {
 		this(event, null, self);
-		alive = true;
 	}
 
 	//Subsequent constructor. Used to create all new states after the first
@@ -60,6 +60,7 @@ public class OpponentState extends BotState<OpponentState> {
 		super(
 				current.getName(),
 				current.getEnergy(),
+				previous==null? 3 : Math.max(0, previous.gunHeat - self.getGunCoolingRate()),
 				current.getHeadingRadians(),
 				current.getVelocity(),
 				calculatePosition(current, self), 
@@ -70,7 +71,7 @@ public class OpponentState extends BotState<OpponentState> {
 		this.bearing = current.getBearingRadians();
 		this.absoluteBearing = absoluteBearing(self, current);
 		this.distance = current.getDistance();
-		this.alive = previous.alive; //What is dead can never die
+		this.alive = previous==null? true : previous.alive; //What is dead can never die
 	}	
 
 	private static Vector calculatePosition(ScannedRobotEvent current, AdvancedRobot self) {
@@ -101,7 +102,7 @@ public class OpponentState extends BotState<OpponentState> {
 //			Vector position, OpponentState previous, 
 //			double bearing, double absoluteBearing, double distance
 			nextState = new OpponentState(
-					"Prediction", energy, newHeading, newVelocity,
+					"Prediction", energy, 0, newHeading, newVelocity,
 					newPosition, nextState,
 					0, 0, 0,
 					-1, false
@@ -148,9 +149,6 @@ public class OpponentState extends BotState<OpponentState> {
 		
 		position.drawTo(g, Utility.oppositeAngle(absoluteBearing), distance / 2);
 	}
-	
-	@SuppressWarnings("serial")
-	public class PredictiveStateUnavailableException extends Exception {}
 
 	public void drawHighlight(Graphics2D g) {
 		g.setColor(Utility.setAlpha(Color.white, 0.6));	
@@ -184,7 +182,8 @@ public class OpponentState extends BotState<OpponentState> {
 		
 		boolean shot = !wallCollision && !previous.shotBySelf && !previous.collidedWithSelf;
 		if (shot) {
-			System.out.println("Fired bullet @"+change.energy);
+			System.out.println("Fired bullet @"+(-change.energy));
+			gunHeat = 1 + (-change.energy / 5.0);
 		}
 		
 		return shot;
@@ -212,4 +211,6 @@ public class OpponentState extends BotState<OpponentState> {
 		return  offField && stopped;
 	}
 
+	@SuppressWarnings("serial")
+	public class PredictiveStateUnavailableException extends Exception {}
 }

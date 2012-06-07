@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 
 import net.adbenson.utility.Utility;
 import robocode.AdvancedRobot;
+import robocode.Rules;
 
 public class SelfState extends BotState<SelfState> {
 
@@ -47,7 +48,7 @@ public class SelfState extends BotState<SelfState> {
 
 		position.drawTo(g, heading, velocity * 5);
 		
-//		g.drawLine(position.intX() - 30, position.intY() - 30, position.intX() - 30, )
+		drawGunHeat(g);
 	}
 
 }
