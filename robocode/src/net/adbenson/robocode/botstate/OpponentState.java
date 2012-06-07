@@ -18,7 +18,7 @@ public class OpponentState extends BotState<OpponentState> {
 	public final double absoluteBearing;
 	public final double distance;
 	
-	private boolean hitBySelf;
+	private boolean shotBySelf;
 	private boolean collidedWithSelf;
 	
 	private boolean alive = true;
@@ -150,8 +150,36 @@ public class OpponentState extends BotState<OpponentState> {
 	}
 	
 	public boolean hasFired() {
+		if (change == null) {
+			return false;
+		}
+
 		boolean energyDropped = change.energy <= -Rules.MIN_BULLET_POWER;
-		return (energyDropped && !hitBySelf && !collidedWithSelf);
+		if (!energyDropped) {
+			return false;
+		}
+		
+		System.out.print("Opponent Energy drop: ");
+		
+		boolean wallCollision = collidedWithWall();
+		if (wallCollision) {
+			System.out.println("Wall Collision");
+		}
+		
+		if (previous.shotBySelf) {
+			System.out.println("Got Shot");
+		}
+		
+		if (previous.collidedWithSelf) {
+			System.out.println("Ran into me");
+		}
+		
+		boolean shot = !wallCollision && !previous.shotBySelf && !previous.collidedWithSelf;
+		if (shot) {
+			System.out.println("Fired bullet @"+change.energy);
+		}
+		
+		return shot;
 	}
 
 	public void died() {
@@ -162,17 +190,19 @@ public class OpponentState extends BotState<OpponentState> {
 		return alive;
 	}
 
-	public void hitBySelf() {
-		hitBySelf = true;
+	public void shotBySelf() {
+		shotBySelf = true;
 	}
 	
 	public void resetStatus() {
-		hitBySelf = false;
+		shotBySelf = false;
 		collidedWithSelf = false;
 	}
 	
 	public boolean collidedWithWall() {
-		return !Rainbot.getField().contains(position.toPoint()) && stopped();
+		boolean offField = !Rainbot.getField().contains(position.toPoint());
+		boolean stopped = stopped();
+		return  offField && stopped;
 	}
 
 	public void collidedWithSelf() {
