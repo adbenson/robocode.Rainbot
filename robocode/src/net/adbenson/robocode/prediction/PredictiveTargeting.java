@@ -210,12 +210,14 @@ System.out.println("Target Firepower: "+targetPower);
 		}
 	}
 
-	public void missedTarget() {
+	public void missedTarget(robocode.Bullet bullet) {
+		//TODO track misses by bot
 		misses++;
 		updateAccuracy();
 	}
 
-	public void hitTarget() {
+	public void hitTarget(String name) {
+		//TODO track hits by bot
 		hits++;
 		updateAccuracy();
 	}
