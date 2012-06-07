@@ -68,7 +68,7 @@ public class Rainbot extends AdvancedRobot {
 	public void run() {
 		generateBoundries();
 		
-		preferredDistance = new Vector(field).magnitude() / 2;		
+		preferredDistance = Rules.RADAR_SCAN_RADIUS / 3.0;		
 		
 		setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(true);
@@ -139,11 +139,7 @@ public class Rainbot extends AdvancedRobot {
 
 	    	
 	    	}
-		       	
-	    	//Reset all statuses so they will be "clean" for the next round of events
-	    	for(OpponentState opponent: state.getAllOpponents()) {
-	    		opponent.resetStatus();
-	    	}
+
 	    	execute();
 
 	    } while (true);
@@ -264,10 +260,11 @@ public class Rainbot extends AdvancedRobot {
 		state.getOpponent(event.getName()).died();
 	}
 	
-	//Hit opponent with bullet
+	//Shot opponent with bullet
 	public void onBulletHit(BulletHitEvent event)  {
 		color.startRainbow();
 		predictor.hitTarget(event.getName());
+		state.getOpponent(event.getName()).shotBySelf();
 	}
 	
 	public void onBulletHitBullet(BulletHitBulletEvent event) {
@@ -280,7 +277,7 @@ public class Rainbot extends AdvancedRobot {
 		predictor.missedTarget(event.getBullet());
 	}
 	
-	//Opponent bullet hit self
+	//Shot by opponent
 	public void onHitByBullet(HitByBulletEvent event) {
 		//TODO avoid?
 	}
