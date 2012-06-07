@@ -31,6 +31,11 @@ public class Rainbot extends AdvancedRobot {
 	
 	public static final double MAX_TURN = Math.PI / 5d;
 	
+	//Min: 0.03 will assure accuracy to the farthest point on the field
+	//Max: 0.15 will assure accuracy at 1/4 of field diagonal
+	//Lower will increase likelihood of waiting additional turns for gun to turn
+	public static final double ACCEPTABLE_GUN_OFFTARGET = 0.07;
+	
 	private BattleState state;
 	
 	public LinkedList<ScannedRobotEvent> foundOpponents;
@@ -44,8 +49,6 @@ public class Rainbot extends AdvancedRobot {
 	
 	private double preferredDistance;
 	
-	private boolean opponentAlive;
-	
 	private BotColor color;
 	
 	public Rainbot() {
@@ -58,12 +61,12 @@ public class Rainbot extends AdvancedRobot {
 		preferredDirection = 1;
 		
 		color = new BotColor();
+		
+		foundOpponents = new LinkedList<ScannedRobotEvent>();
 	}
 	
 	public void run() {
 		generateBoundries();
-		
-		opponentAlive = true;
 		
 		preferredDistance = new Vector(field).magnitude() / 2;		
 		
@@ -77,9 +80,14 @@ public class Rainbot extends AdvancedRobot {
 		boolean ready = false;
 		boolean aim = false;
 		boolean fire = false;
+		
+		long turnTargeted = 0;
 	    
 	    do {
+	    	//Store the current state of this bot and any others scanned
 	    	state.addBots(this, foundOpponents);
+	    	//Reset the list of scanned robots
+	    	foundOpponents = new LinkedList<ScannedRobotEvent>();
 
 	    	color.hueShift(this);
 	    	
@@ -88,26 +96,10 @@ public class Rainbot extends AdvancedRobot {
 	    	//Square off!
 	    	faceOpponent();
 	    	
-	    	//Update bullet positions
-	    	state.getSelfBullets().updateAll(getTime());
-	    	for(BulletQueue<OpponentBullet> queue: state.getAllOpponentBullets()) {
-	    		queue.updateAll(getTime());
-	    	}	    	
+	    	updateBulletStates();
 	    	
 	    	if (predictor.canPredict(getTime())) {
 	    		//TODO decide to predict when the opponent stops moving
-	    		
-		    	if (ready && Math.abs(this.getGunTurnRemainingRadians()) < Rules.GUN_TURN_RATE_RADIANS) {	    		
-		    		aim = true;
-		    		fire = false;
-		    	}
-	    		
-		    	if (state.getTarget().isAlive() && ready && aim && !fire) {
-		    		setFire(requiredFirepower);   		
-		    		ready = false;
-		    		aim = false;
-		    		fire = true;
-		    	}
 
 		    	//ONLY look into prediction if we're not preparing to fire or have recently fired 
 	    		if (!ready && this.getGunHeat() <= getGunCoolingRate()) {
@@ -119,7 +111,8 @@ public class Rainbot extends AdvancedRobot {
 						setGunTurnToTarget(target.target);
 
 						ready = true;
-
+						turnTargeted = getTime();
+						
 					} catch (TargetOutOfRangeException e) {
 						System.out.println("Predicted target unreachable");
 					} catch (ImpossibleToSeeTheFutureIsException e) {
@@ -129,6 +122,20 @@ public class Rainbot extends AdvancedRobot {
 	    			aim = false;
 	    			fire = false;
 	    		}   	
+	    		
+		    	if (ready && 
+		    			Math.abs(this.getGunTurnRemainingRadians()) < ACCEPTABLE_GUN_OFFTARGET &&
+		    			this.getGunHeat() <= 0) {	    		
+		    		aim = true;
+		    		fire = false;
+		    	}
+	    		
+		    	if (state.getTarget().isAlive() && ready && aim && !fire) {
+		    		setFire(requiredFirepower);   		
+		    		ready = false;
+		    		aim = false;
+		    		fire = true;
+		    	}
 
 	    	
 	    	}
@@ -142,12 +149,20 @@ public class Rainbot extends AdvancedRobot {
 	    } while (true);
 	}
 	
+	private void updateBulletStates() {
+    	//Update bullet positions
+    	state.getSelfBullets().updateAll(getTime());
+    	for(BulletQueue<OpponentBullet> queue: state.getAllOpponentBullets()) {
+    		queue.updateAll(getTime());
+    	}	  
+	}
+
 	private void generateBoundries() {
 		Vector botSize = new Vector(getWidth(), getHeight());
 	
 		field = new Rectangle2D.Double(
-				(botSize.x/2)+1, (botSize.y/2)+1, 
-				getBattleFieldWidth()-(botSize.x-2), getBattleFieldHeight()-(botSize.y-2)
+				(botSize.x/2)+1, (botSize.y/2)+2, 
+				getBattleFieldWidth()-(botSize.x-3), getBattleFieldHeight()-(botSize.y-4)
 		);
 		safety = new Rectangle2D.Double(
 				botSize.x, botSize.y, 
@@ -191,6 +206,8 @@ public class Rainbot extends AdvancedRobot {
 	private void detectOpponentFire() {
 		for (OpponentState opponent : state.getAllOpponents()) {
 			if (opponent.hasFired()) {
+				state.opponentFired(opponent.name, getTime());
+				
 				preferredDirection = -preferredDirection;
 				setAhead(100 * preferredDirection);
 			}
