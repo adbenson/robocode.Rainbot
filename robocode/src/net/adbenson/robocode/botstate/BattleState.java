@@ -69,8 +69,6 @@ public class BattleState {
 	}
 
 	public void opponentFired(String name, long turn) {
-		System.out.println("Opponent fire detected!");
-		
 		OpponentState opponent = opponentStates.get(name);
 		
 		OpponentBullet bullet = new OpponentBullet(opponent, turn);

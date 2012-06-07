@@ -3,6 +3,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.text.DecimalFormat;
 import java.util.LinkedList;
 
 import net.adbenson.robocode.botstate.BattleState;
@@ -116,7 +117,7 @@ public class Rainbot extends AdvancedRobot {
 					} catch (TargetOutOfRangeException e) {
 						System.out.println("Predicted target unreachable");
 					} catch (ImpossibleToSeeTheFutureIsException e) {
-						System.out.println("Impossible to see, the future is. ("+e.getMessage()+")");
+						System.out.println("Prediction failed: ("+e.getMessage()+")");
 					}
 		    		
 	    			aim = false;
@@ -135,6 +136,10 @@ public class Rainbot extends AdvancedRobot {
 		    		ready = false;
 		    		aim = false;
 		    		fire = true;
+		    		
+		    		System.out.println("Shot @"+
+		    				new DecimalFormat("0.00").format(requiredFirepower)+" with delay of "+
+		    				(getTime()-turnTargeted)+" turns");
 		    	}
 
 	    	
@@ -244,6 +249,7 @@ public class Rainbot extends AdvancedRobot {
 		
 		for(OpponentState opponent: state.getAllOpponents()) {
 			opponent.drawTarget(g);
+			opponent.drawGunHeat(g);
 		}
 		state.getSelf().draw(g);
 		
