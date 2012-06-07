@@ -1,13 +1,14 @@
 package net.adbenson.robocode.botstate;
 
+import java.text.DecimalFormat;
+
+import net.adbenson.robocode.prediction.PredictiveTargeting;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
 public abstract class BotState<T extends BotState<T>> {
-	
-	public static final double PREDICTIVE_MATCH_SHORTCUT_THRESHOLD = 0.0001;
 	
 	public final String name;
 	public final double energy;
@@ -145,8 +146,8 @@ public abstract class BotState<T extends BotState<T>> {
 				bestMatchDifference = difference;		
 			}
 			
-			if (difference <= PREDICTIVE_MATCH_SHORTCUT_THRESHOLD) {
-				System.out.println("Prediction threshold met. Shortcutting.");
+			if (difference <= PredictiveTargeting.PREDICTIVE_MATCH_SHORTCUT_THRESHOLD) {
+				System.out.println("Prediction threshold met:"+new DecimalFormat("0.000000000000000").format(difference));
 				break testStates;
 			}
 			
