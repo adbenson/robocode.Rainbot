@@ -4,7 +4,7 @@ import java.awt.Graphics2D;
 import java.util.Collections;
 import java.util.LinkedList;
 
-import net.adbenson.robocode.botstate.BattleHistory;
+import net.adbenson.robocode.botstate.BattleState;
 import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
@@ -34,7 +34,7 @@ public class PredictiveTargeting {
 	
 	private final double POWER_RANGE = Rules.MAX_BULLET_POWER - Rules.MIN_BULLET_POWER;
 	
-	private BattleHistory history;
+	private BattleState history;
 	
 	private StateMatchComparator<OpponentState> predictiveComparator;
 	
@@ -46,7 +46,7 @@ public class PredictiveTargeting {
 	private int misses;
 	private double accuracy;
 	
-	public PredictiveTargeting(BattleHistory history) {
+	public PredictiveTargeting(BattleState history) {
 		this.history = history;
 		predictiveComparator = new HeadingVelocityStateComparator();
 		
@@ -67,7 +67,7 @@ public class PredictiveTargeting {
 			return 1;
 		}
 		
-		double turns = history.getStateCount();
+		double turns = history.getTurn();
 		double historyRatio = turns / PREDICTION_LOOKBEHIND;
 		
 		//If we have insufficient historical data, we have no confidence
@@ -142,7 +142,7 @@ System.out.println("Target Firepower: "+targetPower);
 	}
 	
 	private LinkedList<OpponentState> predictTheFuture() throws ImpossibleToSeeTheFutureIsException {
-		OpponentState o = history.getCurrentOpponent();
+		OpponentState o = history.getTarget();
 		LinkedList<OpponentState> prediction = null;
 
 		long start = System.nanoTime();
@@ -160,7 +160,7 @@ System.out.println("Target Firepower: "+targetPower);
 		}
 		
 		System.out.print("time:"); System.out.format("%,8d", System.nanoTime() - start);
-		System.out.println(" ("+history.getStateCount()+")");
+		System.out.println(" ("+history.getTurn()+")");
 
 		return prediction;
 	}
@@ -221,6 +221,7 @@ System.out.println("Target Firepower: "+targetPower);
 	}
 	
 	private void updateAccuracy() {
+		//Avoid divide by zero!
 		if (hits == misses) {
 			accuracy = 0.5;
 		}
