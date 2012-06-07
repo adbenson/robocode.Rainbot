@@ -9,7 +9,7 @@ import net.adbenson.robocode.bullet.SelfBullet;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
-public class BattleHistory {
+public class BattleState {
 	
 	private BulletQueue<SelfBullet> selfBullets;
 	private HashMap<String, BulletQueue<OpponentBullet>> opponentBullets;
@@ -21,7 +21,7 @@ public class BattleHistory {
 	
 	private String targetName;
 	
-	public BattleHistory() {
+	public BattleState() {
 		super();
 
 		selfBullets = new BulletQueue<SelfBullet>();
