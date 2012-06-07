@@ -14,29 +14,28 @@ public abstract class BotState<T extends BotState<T>> {
 	public final double heading;
 	public final double velocity;
 	public final Vector position;
-	public final int index;
+	public final double turn;
 	
 	public final T previous;
 	private T next;
 	public final T change;
 	
 	@SuppressWarnings("unchecked")
-	protected BotState(String name, double energy, double heading, double velocity, Vector position, T previous) {
+	protected BotState(String name, double energy, double heading, double velocity, Vector position, T previous, double turn) {
 		this.name = name;
 		this.energy = energy;
 		this.heading = heading;
 		this.velocity = velocity;
 		this.position = position;
+		this.turn = turn;
 		
 		this.previous = previous;
 		if (previous == null) {
 			change = null;
-			index = 0;
 		}
 		else {
 			change = this.diff(previous);
 			((BotState<T>)previous).next = (T) this;
-			index = previous.index + 1;
 		}
 		
 		next = null;
@@ -55,18 +54,20 @@ public abstract class BotState<T extends BotState<T>> {
 				
 				(add? a.position.add(b.position) 
 						: a.position.subtract(b.position)),
-			null
+			null,
+			(a.turn + b.turn) / 2.0
 		);	
 	}
 
-	public BotState(ScannedRobotEvent bot, Vector position) {
+	public BotState(ScannedRobotEvent bot, Vector position, long turn) {
 		this(
 			bot.getName(),
 			bot.getEnergy(),
 			bot.getHeadingRadians(),
 			bot.getVelocity(),
 			position,
-			null
+			null,
+			turn
 		);
 	}
 	
@@ -77,7 +78,8 @@ public abstract class BotState<T extends BotState<T>> {
 				bot.getHeadingRadians(),
 				bot.getVelocity(),
 				new Vector(bot.getX(), bot.getY()),
-				previous
+				previous,
+				bot.getTime()
 		);
 	}
 	
