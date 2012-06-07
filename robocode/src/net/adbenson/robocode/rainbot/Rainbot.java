@@ -2,7 +2,9 @@ package net.adbenson.robocode.rainbot;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
 import java.text.DecimalFormat;
 import java.util.LinkedList;
 
@@ -46,7 +48,8 @@ public class Rainbot extends AdvancedRobot {
 	private int preferredDirection;
 	
 	private static Rectangle2D field;
-	private Rectangle2D safety;
+	private RoundRectangle2D safety;
+	private RoundRectangle2D preferredRadius;
 	
 	private double preferredDistance;
 	
@@ -92,10 +95,15 @@ public class Rainbot extends AdvancedRobot {
 
 	    	color.hueShift(this);
 	    	
-	    	detectOpponentFire();
-	    	
 	    	//Square off!
 	    	faceOpponent();
+	    	
+	    	OpponentBullet bullet = detectOpponentFire();
+	    	if (bullet != null) {
+	    		dodge(bullet);
+	    	}
+	    	
+	    	avoidWalls();
 	    	
 	    	updateBulletStates();
 	    	
@@ -165,9 +173,17 @@ public class Rainbot extends AdvancedRobot {
 				(botSize.x/2), (botSize.y/2), 
 				getBattleFieldWidth()-(botSize.x), getBattleFieldHeight()-(botSize.y)
 		);
-		safety = new Rectangle2D.Double(
+		
+		safety = new RoundRectangle2D.Double(
 				botSize.x, botSize.y, 
-				getBattleFieldWidth()-(botSize.x*2), getBattleFieldHeight()-(botSize.y*2)
+				getBattleFieldWidth()-(botSize.x*2), getBattleFieldHeight()-(botSize.y*2),
+				175, 175
+		);
+		
+		preferredRadius = new RoundRectangle2D.Double(
+				botSize.x*1.5, botSize.y*1.5, 
+				getBattleFieldWidth()-(botSize.x*3), getBattleFieldHeight()-(botSize.y*3),
+				250, 250
 		);
 	}
 
@@ -175,6 +191,10 @@ public class Rainbot extends AdvancedRobot {
 		Vector offset = target.position.subtract(getPosition());
 		double heading = Utility.angleDifference(offset.getAngle(), this.getGunHeadingRadians());
 		this.setTurnGunRightRadians(heading);
+	}
+	
+	private void setTurnHeading(double heading) {
+		setTurnRight(Utility.angleDifference(heading, getHeadingRadians()));
 	}
 	
 	private void faceOpponent() {
@@ -191,8 +211,8 @@ public class Rainbot extends AdvancedRobot {
     		offFace -= Utility.HALF_PI;
     		
     		//Turn farther away the closer we are - by 1/2 field away, straighten out
-    		double distanceRatio = (preferredDistance - o.distance) / (preferredDistance);   		
-    		offFace += MAX_TURN * distanceRatio * preferredDirection;
+//    		double distanceRatio = (preferredDistance - o.distance) / (preferredDistance);   		
+//    		offFace += MAX_TURN * distanceRatio * preferredDirection;
     		    		
     		//Multiply the offset - we don't have all day! Move it! (If it's too high, it introduces jitter.)
     		setTurnRight(offFace * 10); 
@@ -204,15 +224,48 @@ public class Rainbot extends AdvancedRobot {
     	}
 	}
 	
-	private void detectOpponentFire() {
+	private OpponentBullet detectOpponentFire() {
+		OpponentBullet focus = null;
+		OpponentBullet bullet = null;
+		
+		//Check all opponents for firing
 		for (OpponentState opponent : state.getAllOpponents()) {
 			if (opponent.hasFired()) {
-				state.opponentFired(opponent.name, getTime());
-				
-				preferredDirection = -preferredDirection;
-				setAhead(100 * preferredDirection);
+				//Get the bullet details
+				bullet = state.opponentFired(opponent.name, getTime());
+				//If this was fired by our main opponent, focus on it.
+				if (opponent.name.equals(state.getTargetName())) {
+					focus = bullet;
+				}
 			}
-		}		
+		}
+		
+		//If there's no bullet from our main opponent, send any bullet we might have found.
+		if (focus == null && bullet != null) {
+			return bullet;
+		}
+		
+		return focus;
+	}
+	
+	private void dodge(OpponentBullet bullet) {
+
+		
+		setAhead(100 * preferredDirection);
+	}
+	
+	private void avoidWalls() {
+		if(!safety.contains(getPosition().toPoint())) {
+			Vector center = new Vector(field.getCenterX(), field.getCenterY());
+			Vector heading = center.subtract(getPosition());
+			setTurnHeading(heading.getAngle());
+			ahead(heading.magnitude());
+		}
+	}
+	
+	private double distanceFromCenter() {
+		Vector center = new Vector(field.getCenterX(), field.getCenterY());
+		return getPosition().distance(center);
 	}
 
 	private Vector getPosition() {
@@ -238,8 +291,12 @@ public class Rainbot extends AdvancedRobot {
 		g.setColor(Color.red);
 		g.draw(field);
 		
-		g.setColor(Color.green);
+		g.setColor(Color.yellow);
 		g.draw(safety);
+		
+		g.setColor(Color.green);
+		g.draw(preferredRadius);
+		
 		g.setStroke(new BasicStroke(3));
 		
 		for(BulletQueue<OpponentBullet> queue: state.getAllOpponentBullets()) {
