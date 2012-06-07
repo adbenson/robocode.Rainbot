@@ -44,7 +44,7 @@ public abstract class Bullet {
 	}
 	
 	public double calculateDistanceTravelled(long time) {
-		return velocity * time;
+		return velocity * (time+1);
 	}
 
 	private double velocity() {
