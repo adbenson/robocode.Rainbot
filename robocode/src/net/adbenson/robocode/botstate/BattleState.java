@@ -68,7 +68,7 @@ public class BattleState {
 		return opponentStates.get(name);
 	}
 
-	public void opponentFired(String name, long turn) {
+	public OpponentBullet opponentFired(String name, long turn) {
 		OpponentState opponent = opponentStates.get(name);
 		
 		OpponentBullet bullet = new OpponentBullet(opponent, turn);
@@ -84,6 +84,8 @@ public class BattleState {
 		}
 		
 		queue.add(bullet);
+		
+		return bullet;
 	}
 
 	public void selfFired(OpponentState target, robocode.Bullet bullet, long turn) {
