@@ -14,10 +14,12 @@ import robocode.Rules;
 
 public class PredictiveTargeting {
 	
+	public static final double PREDICTIVE_MATCH_SHORTCUT_THRESHOLD = 0.0001;
+	
 	//Lookbehind determines how many past states the bot will attempt to match before making a prediction.
 	//A high value will generally be more accurate, but more prone to wildly false predictions against random enemies.
 	//A higher value will also put a higher load on the processor and increase the time before the first lock.
-	public static final int PREDICTION_LOOKBEHIND = 50;
+	public static final int PREDICTION_LOOKBEHIND = 20;
 	
 	//Lookahead determines how far into the future the bot will predict it's opponents movements.
 	//It also determines how far away the bot can target;
@@ -26,7 +28,7 @@ public class PredictiveTargeting {
 	//Recommend around 38 to target 75% of the field.
 	public static final int PREDICTION_LOOKAHEAD = 38;
 	
-	public static final double PREDICTION_CONFIDENCE_SHIFT = 0.05;
+	public static final double PREDICTION_CONFIDENCE_SHIFT = 0.0005 * PREDICTION_LOOKBEHIND;
 	
 	public static final int LOW_CONFIDENCE_TURN_THRESHOLD = 5;
 
@@ -149,7 +151,7 @@ System.out.println("Target Firepower: "+targetPower);
 		OpponentState o = history.getTarget();
 		LinkedList<OpponentState> prediction = null;
 
-		long start = System.nanoTime();
+//		long start = System.nanoTime();
 		
 		OpponentState bestMatch = o.matchStateSequence(PREDICTION_LOOKBEHIND, PREDICTION_LOOKAHEAD, predictiveComparator);
 		
@@ -158,13 +160,13 @@ System.out.println("Target Firepower: "+targetPower);
 		}
 		
 		try {
-			prediction = o.predictStates(bestMatch, PREDICTION_LOOKBEHIND);
+			prediction = o.predictStates(bestMatch, PREDICTION_LOOKAHEAD);
 		} catch (PredictiveStateUnavailableException e) {
 			throw new ImpossibleToSeeTheFutureIsException("Insufficient future states to project prediction");
 		}
 		
-		System.out.print("time:"); System.out.format("%,8d", System.nanoTime() - start);
-		System.out.println(" ("+history.getTurn()+")");
+//		System.out.print("time:"); System.out.format("%,8d", System.nanoTime() - start);
+//		System.out.println(" ("+history.getTurn()+")");
 
 		return prediction;
 	}
