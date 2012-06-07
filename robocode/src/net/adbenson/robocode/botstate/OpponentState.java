@@ -19,8 +19,8 @@ public class OpponentState extends BotState<OpponentState> {
 	public OpponentState(
 			String name, double energy, double heading, double velocity, 
 			Vector position, OpponentState previous, 
-			double bearing, double absoluteBearing, double distance) {
-		super(name, energy, heading, velocity, position, previous);
+			double bearing, double absoluteBearing, double distance, long turn) {
+		super(name, energy, heading, velocity, position, previous, turn);
 		this.bearing = bearing;
 		this.absoluteBearing = absoluteBearing;
 		this.distance = distance;
@@ -49,7 +49,8 @@ public class OpponentState extends BotState<OpponentState> {
 				current.getHeadingRadians(),
 				current.getVelocity(),
 				calculatePosition(current, self), 
-				previous
+				previous,
+				self.getTime()
 		);
 		
 		this.bearing = current.getBearingRadians();
@@ -87,7 +88,8 @@ public class OpponentState extends BotState<OpponentState> {
 			nextState = new OpponentState(
 					"Prediction", energy, newHeading, newVelocity,
 					newPosition, nextState,
-					0, 0, 0
+					0, 0, 0,
+					-1
 			);
 			nextStates.add(nextState);
 			
