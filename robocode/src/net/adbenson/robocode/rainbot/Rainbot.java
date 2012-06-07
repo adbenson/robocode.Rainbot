@@ -3,7 +3,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-import java.util.Collection;
 import java.util.LinkedList;
 
 import net.adbenson.robocode.botstate.BattleState;

@@ -21,7 +21,10 @@ public abstract class BotState<T extends BotState<T>> {
 	public final T change;
 	
 	@SuppressWarnings("unchecked")
-	protected BotState(String name, double energy, double heading, double velocity, Vector position, T previous, double turn) {
+	protected BotState(
+			String name, 
+			double energy, double heading, double velocity, 
+			Vector position, T previous, double turn) {
 		this.name = name;
 		this.energy = energy;
 		this.heading = heading;
@@ -154,7 +157,8 @@ public abstract class BotState<T extends BotState<T>> {
 		return bestMatch;
 	}
 	
-	public double compareStates(T reference, T test, int nStates, StateMatchComparator<T> compare) throws StateComparisonUnavailableException {
+	public double compareStates(T reference, T test, int nStates, StateMatchComparator<T> compare) 
+			throws StateComparisonUnavailableException {
 		double difference = 0;
 		
 		for(int i = 0; i < nStates; i++) {

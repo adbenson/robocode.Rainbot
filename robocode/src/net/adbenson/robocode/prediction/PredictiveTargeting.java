@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 import net.adbenson.robocode.botstate.BattleState;
-import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState;
+import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
 import net.adbenson.robocode.bullet.Bullet;
 import net.adbenson.utility.Vector;

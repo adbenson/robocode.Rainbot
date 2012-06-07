@@ -1,8 +1,8 @@
 package net.adbenson.robocode.prediction;
 
+import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.BotState.StateComparisonUnavailableException;
 import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
-import net.adbenson.robocode.botstate.OpponentState;
 import robocode.Rules;
 
 public class HeadingVelocityStateComparator implements StateMatchComparator<OpponentState> {
