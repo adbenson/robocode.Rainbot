@@ -6,7 +6,6 @@ import java.awt.Graphics2D;
 
 import net.adbenson.utility.Utility;
 import robocode.AdvancedRobot;
-import robocode.Rules;
 
 public class SelfState extends BotState<SelfState> {
 
