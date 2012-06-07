@@ -161,8 +161,8 @@ public class Rainbot extends AdvancedRobot {
 		Vector botSize = new Vector(getWidth(), getHeight());
 	
 		field = new Rectangle2D.Double(
-				(botSize.x/2)+1, (botSize.y/2)+2, 
-				getBattleFieldWidth()-(botSize.x-3), getBattleFieldHeight()-(botSize.y-4)
+				(botSize.x/2), (botSize.y/2), 
+				getBattleFieldWidth()-(botSize.x), getBattleFieldHeight()-(botSize.y)
 		);
 		safety = new Rectangle2D.Double(
 				botSize.x, botSize.y, 
