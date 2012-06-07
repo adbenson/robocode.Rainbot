@@ -1,12 +1,13 @@
 package net.adbenson.robocode.prediction;
 
 import java.awt.Graphics2D;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.LinkedList;
 
 import net.adbenson.robocode.botstate.BattleState;
-import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.BotState.StateMatchComparator;
+import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.botstate.OpponentState.PredictiveStateUnavailableException;
 import net.adbenson.robocode.bullet.Bullet;
 import net.adbenson.utility.Vector;
@@ -19,7 +20,7 @@ public class PredictiveTargeting {
 	//Lookbehind determines how many past states the bot will attempt to match before making a prediction.
 	//A high value will generally be more accurate, but more prone to wildly false predictions against random enemies.
 	//A higher value will also put a higher load on the processor and increase the time before the first lock.
-	public static final int PREDICTION_LOOKBEHIND = 20;
+	public static final int PREDICTION_LOOKBEHIND = 200;
 	
 	//Lookahead determines how far into the future the bot will predict it's opponents movements.
 	//It also determines how far away the bot can target;
@@ -63,10 +64,7 @@ public class PredictiveTargeting {
 	
 
 	private double getConfidence() {
-//		//Until we have some hits and misses, we have no confidence.
-//		if (hits == 0 && misses == 0) {
-//			return 0;
-//		}
+
 		//If we've only ever hit, we're very confident
 		if (hits > 1 && misses == 0) {
 			System.out.println("PERFECT RECORD! Very confident!");
@@ -75,18 +73,16 @@ public class PredictiveTargeting {
 		
 		double turns = history.getTurn();
 		double historyRatio = turns / PREDICTION_LOOKBEHIND;
-		
-		//If we have insufficient historical data, we have no confidence
-		if (historyRatio < 2) {
-			return 0;
-		}
-		
-		double historyFactor = historyRatio * PREDICTION_CONFIDENCE_SHIFT;
+
+		double historyFactor = (historyRatio * PREDICTION_CONFIDENCE_SHIFT);
 		
 		//Increase confidence with accuracy and good history
 		double confidence = (accuracy / 2) + historyFactor;
 		
-		System.out.println("Confidence score:"+confidence+" ("+accuracy+" accuracy, "+historyFactor+" history factor)");
+		System.out.println(
+				"Confidence:"+new DecimalFormat("0.0000").format(confidence)+" ("+
+				(int)(accuracy*100)+"% accuracy, "+
+				historyFactor+" history factor)");
 		
 		return Math.min(1, confidence);		
 	}
@@ -133,8 +129,7 @@ public class PredictiveTargeting {
 		}
 		
 		//Otherwise, try to find the target power level
-		double targetPower = getTargetFirepower(confidence);
-System.out.println("Target Firepower: "+targetPower);		
+		double targetPower = getTargetFirepower(confidence);		
 		//Get the closest entry with a required power >= targetPower
 		PredictedTarget closestMatch = null;
 		for (PredictedTarget target : targets) {
@@ -202,7 +197,7 @@ System.out.println("Target Firepower: "+targetPower);
 	}
 	
 	public boolean canPredict(long turn) {
-		return turn > PREDICTION_LOOKBEHIND + PREDICTION_LOOKAHEAD;
+		return turn > PREDICTION_LOOKBEHIND + PREDICTION_LOOKAHEAD + 5;
 	}
 	
 	public void drawPrediction(Graphics2D g) {
