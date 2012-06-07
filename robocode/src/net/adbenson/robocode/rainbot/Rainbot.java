@@ -3,9 +3,13 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Collection;
+import java.util.LinkedList;
 
-import net.adbenson.robocode.botstate.BattleHistory;
+import net.adbenson.robocode.botstate.BattleState;
 import net.adbenson.robocode.botstate.OpponentState;
+import net.adbenson.robocode.bullet.BulletQueue;
+import net.adbenson.robocode.bullet.OpponentBullet;
 import net.adbenson.robocode.prediction.ImpossibleToSeeTheFutureIsException;
 import net.adbenson.robocode.prediction.PredictedTarget;
 import net.adbenson.robocode.prediction.PredictiveTargeting;
@@ -24,13 +28,11 @@ import robocode.Rules;
 import robocode.ScannedRobotEvent;
 import robocode.util.Utils;
 
-
 public class Rainbot extends AdvancedRobot {
-	
 	
 	public static final double MAX_TURN = Math.PI / 5d;
 	
-	private BattleHistory history;
+	private BattleState history;
 	
 	private RoundStatus status;
 	
@@ -50,7 +52,7 @@ public class Rainbot extends AdvancedRobot {
 	public Rainbot() {
 		super();
 		
-		history = new BattleHistory();
+		history = new BattleState();
 			
 		status = new RoundStatus();	
 		
@@ -80,21 +82,29 @@ public class Rainbot extends AdvancedRobot {
 		boolean fire = false;
 	    
 	    do {
+	    	history.addBots(this, status.foundOpponents);
+	    	
+//			history.addBots(this, e, getTime());
+//			
+//			if (history.getCurrentOpponent().change != null) {
+//				status.opponentEnergyDrop = history.getCurrentOpponent().change.energy <= -Rules.MIN_BULLET_POWER;
+//			}
+	    	
 	    	color.hueShift(this);
 	    	
 	    	//Square off!
 	    	faceOpponent();
 	        
 	    	detectOpponentFire();
-	    		    	
-	    	history.getSelfBullets().updateAll(getTime());
-	    	history.getOpponentBullets().updateAll(getTime());
 	    	
-//			double velocityTrend = Math.abs(o.previous.change.velocity - o.change.velocity);
-//			double headingTrend = Math.abs(o.previous.change.heading - o.change.heading);
+	    	//Update bullet positions
+	    	history.getSelfBullets().updateAll(getTime());
+	    	for(BulletQueue<OpponentBullet> queue: history.getAllOpponentBullets()) {
+	    		queue.updateAll(getTime());
+	    	}	    	
 	    	
 	    	if (predictor.canPredict(getTime())) {
-//	    		if (velocityTrend < 0.01 && headingTrend < 0.01 && o.change.heading < 0.01) {
+	    		//TODO decide to predict when the opponent stops moving
 	    		
 		    	if (ready && Math.abs(this.getGunTurnRemainingRadians()) < Rules.GUN_TURN_RATE_RADIANS) {	    		
 		    		aim = true;
@@ -159,8 +169,8 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	private void faceOpponent() {
-    	if (history.hasCurrentState()) {
-    		OpponentState o = history.getCurrentOpponent();
+    	if (history.hasTarget()) {
+    		OpponentState o = history.getTarget();
     		double offFace = o.bearing;
     		//We don't care which direction we face, so treat either direction the same.
     		if (offFace < 0) {
@@ -191,7 +201,7 @@ public class Rainbot extends AdvancedRobot {
 				!status.collidedWithOpponent) {
 		
 			//Find the opponent's position on the field
-			OpponentState opponent = history.getCurrentOpponent();
+			OpponentState opponent = history.getTarget();
 			Vector opponentPos = opponent.getPosition();
 
 			//Eliminate the possibility of wall crash
@@ -200,7 +210,7 @@ public class Rainbot extends AdvancedRobot {
 			}
 			else {
 				System.out.println("Opponent fire detected");
-				history.opponentFired();
+//history.opponentFired(getTime());
 				preferredDirection = -preferredDirection;
 				setAhead(100 * preferredDirection);
 			}
@@ -212,20 +222,15 @@ public class Rainbot extends AdvancedRobot {
 		return new Vector(getX(), getY());
 	}
 	
-	public void setFire(double power) {
-System.out.println("Firing@"+power);		
+	public void setFire(double power) {	
 		robocode.Bullet bullet = super.setFireBullet(power);
-		history.selfFired(predictor.getTarget(), bullet);
+		history.selfFired(predictor.getTarget(), bullet, getTime());
 	}
 	
 	public void onScannedRobot(ScannedRobotEvent e) {
-		history.addBots(this, e, getTime());
-		
-		if (history.getCurrentOpponent().change != null) {
-			status.opponentEnergyDrop = history.getCurrentOpponent().change.energy <= -Rules.MIN_BULLET_POWER;
-		}
-		
+		status.foundOpponents.add(e);
 		maintainRadarLock(e);
+		history.setTargetName(e.getName());
 	}
 	
 	public void onRobotDeath(RobotDeathEvent event) {
@@ -248,18 +253,17 @@ System.out.println("Firing@"+power);
 		
 		g.setColor(Color.green);
 		g.draw(safety);
+		g.setStroke(new BasicStroke(3));
 		
-		if (history.hasCurrentState()) {
-			
-			g.setStroke(new BasicStroke(3));
-			
-			history.getOpponentBullets().draw(g);
-			history.getSelfBullets().draw(g);
-			
-			history.getCurrentState().opponent.drawTarget(g);
-			
-			history.getCurrentState().self.draw(g);
+		for(BulletQueue<OpponentBullet> queue: history.getAllOpponentBullets()) {
+			queue.draw(g);
 		}
+		history.getSelfBullets().draw(g);
+		
+		for(OpponentState opponent: history.getAllOpponents()) {
+			opponent.drawTarget(g);
+		}
+		history.getSelf().draw(g);
 		
 		predictor.drawPrediction(g);
 	}
@@ -272,7 +276,7 @@ System.out.println("Firing@"+power);
 	
 	public void onBulletHitBullet(BulletHitBulletEvent event) {
 		history.getSelfBullets().remove(event.getBullet());
-		history.getOpponentBullets().remove(event.getHitBullet());
+//		history.getOpponentBullets().remove(event.getHitBullet());
 	}
 	
 	public void onBulletMissed(BulletMissedEvent event) {
@@ -303,6 +307,8 @@ System.out.println("Firing@"+power);
 		boolean collidedWithOpponent;
 		boolean opponentEnergyDrop;
 		
+		public LinkedList<ScannedRobotEvent> foundOpponents;
+		
 		public RoundStatus() {
 			reset();
 		}
@@ -312,6 +318,8 @@ System.out.println("Firing@"+power);
 			collidedWithWall = false;
 			collidedWithOpponent = false;
 			opponentEnergyDrop = false;
+			
+			foundOpponents = new LinkedList<ScannedRobotEvent>();
 		}
 	}	
 }
