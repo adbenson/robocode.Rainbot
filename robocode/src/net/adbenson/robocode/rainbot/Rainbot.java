@@ -31,9 +31,9 @@ public class Rainbot extends AdvancedRobot {
 	
 	public static final double MAX_TURN = Math.PI / 5d;
 	
-	private BattleState history;
+	private BattleState state;
 	
-	private RoundStatus status;
+	public LinkedList<ScannedRobotEvent> foundOpponents;
 	
 	private PredictiveTargeting predictor;
 	
@@ -51,11 +51,9 @@ public class Rainbot extends AdvancedRobot {
 	public Rainbot() {
 		super();
 		
-		history = new BattleState();
-			
-		status = new RoundStatus();	
+		state = new BattleState();
 		
-		predictor = new PredictiveTargeting(history);
+		predictor = new PredictiveTargeting(state);
 		
 		preferredDirection = 1;
 		
@@ -81,24 +79,18 @@ public class Rainbot extends AdvancedRobot {
 		boolean fire = false;
 	    
 	    do {
-	    	history.addBots(this, status.foundOpponents);
-	    	
-//			history.addBots(this, e, getTime());
-//			
-//			if (history.getCurrentOpponent().change != null) {
-//				status.opponentEnergyDrop = history.getCurrentOpponent().change.energy <= -Rules.MIN_BULLET_POWER;
-//			}
-	    	
+	    	state.addBots(this, foundOpponents);
+
 	    	color.hueShift(this);
+	    	
+	    	detectOpponentFire();
 	    	
 	    	//Square off!
 	    	faceOpponent();
-	        
-	    	detectOpponentFire();
 	    	
 	    	//Update bullet positions
-	    	history.getSelfBullets().updateAll(getTime());
-	    	for(BulletQueue<OpponentBullet> queue: history.getAllOpponentBullets()) {
+	    	state.getSelfBullets().updateAll(getTime());
+	    	for(BulletQueue<OpponentBullet> queue: state.getAllOpponentBullets()) {
 	    		queue.updateAll(getTime());
 	    	}	    	
 	    	
@@ -110,7 +102,7 @@ public class Rainbot extends AdvancedRobot {
 		    		fire = false;
 		    	}
 	    		
-		    	if (opponentAlive && ready && aim && !fire) {
+		    	if (state.getTarget().isAlive() && ready && aim && !fire) {
 		    		setFire(requiredFirepower);   		
 		    		ready = false;
 		    		aim = false;
@@ -142,7 +134,9 @@ public class Rainbot extends AdvancedRobot {
 	    	}
 		       	
 	    	//Reset all statuses so they will be "clean" for the next round of events
-	        status.reset();
+	    	for(OpponentState opponent: state.getAllOpponents()) {
+	    		opponent.resetStatus();
+	    	}
 	    	execute();
 
 	    } while (true);
@@ -168,8 +162,9 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	private void faceOpponent() {
-    	if (history.hasTarget()) {
-    		OpponentState o = history.getTarget();
+    	if (state.hasTarget()) {
+    		OpponentState o = state.getTarget();
+    		
     		double offFace = o.bearing;
     		//We don't care which direction we face, so treat either direction the same.
     		if (offFace < 0) {
@@ -194,27 +189,12 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	private void detectOpponentFire() {
-		//Check for energy drop, but rule out other causes
-		if (status.opponentEnergyDrop &&
-				!status.hitToOpponent &&
-				!status.collidedWithOpponent) {
-		
-			//Find the opponent's position on the field
-			OpponentState opponent = history.getTarget();
-			Vector opponentPos = opponent.getPosition();
-
-			//Eliminate the possibility of wall crash
-			if (!field.contains(opponentPos.toPoint()) && opponent.stopped()) {
-				System.out.println("Looks like he crashed!");
-			}
-			else {
-				System.out.println("Opponent fire detected");
-//history.opponentFired(getTime());
+		for (OpponentState opponent : state.getAllOpponents()) {
+			if (opponent.hasFired()) {
 				preferredDirection = -preferredDirection;
 				setAhead(100 * preferredDirection);
 			}
-		}
-		
+		}		
 	}
 
 	private Vector getPosition() {
@@ -223,17 +203,7 @@ public class Rainbot extends AdvancedRobot {
 	
 	public void setFire(double power) {	
 		robocode.Bullet bullet = super.setFireBullet(power);
-		history.selfFired(predictor.getTarget(), bullet, getTime());
-	}
-	
-	public void onScannedRobot(ScannedRobotEvent e) {
-		status.foundOpponents.add(e);
-		maintainRadarLock(e);
-		history.setTargetName(e.getName());
-	}
-	
-	public void onRobotDeath(RobotDeathEvent event) {
-		opponentAlive = false;
+		state.selfFired(predictor.getTarget(), bullet, getTime());
 	}
 	
 	private void startRadarLock() {
@@ -254,71 +224,60 @@ public class Rainbot extends AdvancedRobot {
 		g.draw(safety);
 		g.setStroke(new BasicStroke(3));
 		
-		for(BulletQueue<OpponentBullet> queue: history.getAllOpponentBullets()) {
+		for(BulletQueue<OpponentBullet> queue: state.getAllOpponentBullets()) {
 			queue.draw(g);
 		}
-		history.getSelfBullets().draw(g);
+		state.getSelfBullets().draw(g);
 		
-		for(OpponentState opponent: history.getAllOpponents()) {
+		for(OpponentState opponent: state.getAllOpponents()) {
 			opponent.drawTarget(g);
 		}
-		history.getSelf().draw(g);
+		state.getSelf().draw(g);
 		
 		predictor.drawPrediction(g);
 	}
-		
+	
+	public void onScannedRobot(ScannedRobotEvent e) {
+		foundOpponents.add(e);
+		maintainRadarLock(e);
+		state.setTargetName(e.getName());
+	}
+	
+	public void onRobotDeath(RobotDeathEvent event) {
+		state.getOpponent(event.getName()).died();
+	}
+	
+	//Hit opponent with bullet
 	public void onBulletHit(BulletHitEvent event)  {
 		color.startRainbow();
-		status.hitToOpponent = true;
-		predictor.hitTarget();
+		predictor.hitTarget(event.getName());
 	}
 	
 	public void onBulletHitBullet(BulletHitBulletEvent event) {
-		history.getSelfBullets().remove(event.getBullet());
-//		history.getOpponentBullets().remove(event.getHitBullet());
+		state.getSelfBullets().remove(event.getBullet());
+		//TODO remove opponent bullets		
 	}
 	
 	public void onBulletMissed(BulletMissedEvent event) {
-		history.getSelfBullets().remove(event.getBullet());
-		predictor.missedTarget();
+		state.getSelfBullets().remove(event.getBullet());
+		predictor.missedTarget(event.getBullet());
 	}
 	
+	//Opponent bullet hit self
 	public void onHitByBullet(HitByBulletEvent event) {
-		status.hitByOpponent = true;
+		//TODO avoid?
 	}
 	
+	//Collision with self
 	public void onHitRobot(HitRobotEvent event) {
-		status.collidedWithOpponent = true;
+		state.getOpponent(event.getName()).collidedWithSelf();
 	}
 	
 	public void onHitWall(HitWallEvent event) {
-		status.collidedWithWall = true;
+		//TODO avoid?
 	}
 	
 	public static Rectangle2D getField() {
 		return field;
 	}
-			
-	class RoundStatus {		
-		boolean hitByOpponent;
-		boolean hitToOpponent;
-		boolean collidedWithWall;
-		boolean collidedWithOpponent;
-		boolean opponentEnergyDrop;
-		
-		public LinkedList<ScannedRobotEvent> foundOpponents;
-		
-		public RoundStatus() {
-			reset();
-		}
-		public void reset() {
-			hitByOpponent = false;
-			hitToOpponent = false;
-			collidedWithWall = false;
-			collidedWithOpponent = false;
-			opponentEnergyDrop = false;
-			
-			foundOpponents = new LinkedList<ScannedRobotEvent>();
-		}
-	}	
 }

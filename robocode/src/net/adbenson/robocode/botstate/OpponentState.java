@@ -5,9 +5,11 @@ import java.awt.Graphics2D;
 import java.util.LinkedList;
 
 import net.adbenson.robocode.prediction.PredictiveTargeting;
+import net.adbenson.robocode.rainbot.Rainbot;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
+import robocode.Rules;
 import robocode.ScannedRobotEvent;
 
 public class OpponentState extends BotState<OpponentState> {
@@ -15,6 +17,11 @@ public class OpponentState extends BotState<OpponentState> {
 	public final double bearing;
 	public final double absoluteBearing;
 	public final double distance;
+	
+	private boolean hitBySelf;
+	private boolean collidedWithSelf;
+	
+	private boolean alive = true;
 	
 	public OpponentState(
 			String name, double energy, double heading, double velocity, 
@@ -140,6 +147,36 @@ public class OpponentState extends BotState<OpponentState> {
 	public void drawHighlight(Graphics2D g) {
 		g.setColor(Utility.setAlpha(Color.white, 0.6));	
 		g.fillOval(position.intX()-3, position.intY()-3, 6, 6);
+	}
+	
+	public boolean hasFired() {
+		boolean energyDropped = change.energy <= -Rules.MIN_BULLET_POWER;
+		return (energyDropped && !hitBySelf && !collidedWithSelf);
+	}
+
+	public void died() {
+		alive = false;
+	}
+	
+	public boolean isAlive() {
+		return alive;
+	}
+
+	public void hitBySelf() {
+		hitBySelf = true;
+	}
+	
+	public void resetStatus() {
+		hitBySelf = false;
+		collidedWithSelf = false;
+	}
+	
+	public boolean collidedWithWall() {
+		return !Rainbot.getField().contains(position.toPoint()) && stopped();
+	}
+
+	public void collidedWithSelf() {
+		collidedWithSelf = true;
 	}
 
 }
