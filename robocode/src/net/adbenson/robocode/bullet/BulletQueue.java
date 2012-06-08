@@ -28,6 +28,18 @@ System.out.println("Bullet marked for deletion");
 	}
 	
 	public void remove(robocode.Bullet bullet) {
-		//TODO
+		Bullet match = null;
+		for(Bullet b : this) {
+			if (b.matches(bullet)) {
+				match = b;
+			}
+		}
+		
+		if (match != null) {
+			remove(match);
+		}
+		else {
+			System.out.println("Could not match bullet to remove.");
+		}
 	}
 }
