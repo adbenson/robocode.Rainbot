@@ -93,7 +93,7 @@ public abstract class Bullet {
 		double angle = Utility.angleDiff(Utility.oppositeAngle(heading), Utility.HALF_PI);
 		
 		escapePoints = new LinkedList<Vector>();
-		for (int turn = (int) -turns; turn <= turns ; turn+=3) {
+		for (int turn = (int) -turns; turn <= turns ; turn++) {
 			escapePoints.add(target.position.project(angle, turn * Rules.MAX_VELOCITY));
 		}
 	}
@@ -119,5 +119,7 @@ public abstract class Bullet {
 	public abstract boolean shouldDelete();
 	
     public abstract void updateProjection();
+    
+	public abstract boolean matches(robocode.Bullet b); 
 	
 }
