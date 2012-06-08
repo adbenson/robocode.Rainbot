@@ -27,7 +27,7 @@ public class SelfBullet extends Bullet {
 	public void draw(Graphics2D g) {
 		Color c = Color.getHSBColor(COLOR_RATIO * colorIndex, 1, 1);
 		
-//		drawEscapePoints(g, c);
+		drawEscapePoints(g, c);
 		
 		g.setStroke(new BasicStroke(2));
 
