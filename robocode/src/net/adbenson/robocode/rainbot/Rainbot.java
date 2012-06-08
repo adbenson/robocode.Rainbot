@@ -35,7 +35,7 @@ public class Rainbot extends AdvancedRobot {
 	
 	public static final double MAX_TURN_OFF_FACE = Math.PI / TURN_FACTOR;
 	
-	public static final double PREFERRED_DISTANCE = Rules.RADAR_SCAN_RADIUS / TURN_FACTOR;
+	public static final double PREFERRED_DISTANCE = Rules.RADAR_SCAN_RADIUS / (TURN_FACTOR / 2.0);
 	
 	//Min: 0.03 will assure accuracy to the farthest point on the field
 	//Max: 0.15 will assure accuracy at 1/4 of field diagonal
@@ -373,21 +373,24 @@ public class Rainbot extends AdvancedRobot {
 		color.startRainbow();
 		predictor.hitTarget(event.getName());
 		state.getOpponent(event.getName()).shotBySelf();
+		
+		state.getSelfBullets().remove(event.getBullet());
 	}
 	
 	public void onBulletHitBullet(BulletHitBulletEvent event) {
 		state.getSelfBullets().remove(event.getBullet());
-		//TODO remove opponent bullets		
+		state.getOpponentBullets(event.getBullet().getName()).remove(event.getBullet());	
 	}
 	
 	public void onBulletMissed(BulletMissedEvent event) {
-		state.getSelfBullets().remove(event.getBullet());
+//		state.getSelfBullets().remove(event.getBullet());
 		predictor.missedTarget(event.getBullet());
 	}
 	
 	//Shot by opponent
 	public void onHitByBullet(HitByBulletEvent event) {
-		//TODO avoid?
+		state.getOpponentBullets(event.getBullet().getName()).remove(event.getBullet());
+		//TODO track hit/miss rate
 	}
 	
 	//Collision with self
