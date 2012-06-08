@@ -215,7 +215,7 @@ public class Vector {
 	 */
 	public void drawTo(Graphics2D g, double angle, double length) {
 		Vector end = this.project(angle, length);
-		g.drawLine(intX(), intY(), end.intX(), end.intY());
+		drawTo(g, end);
 	}
 	
 	/**
@@ -223,6 +223,14 @@ public class Vector {
 	 */
 	public String toString() {
 		return "Vector: ("+x+", "+y+") [@"+hashCode()+"]";
+	}
+
+	public void drawTo(Graphics2D g, Vector end) {
+		g.drawLine(intX(), intY(), end.intX(), end.intY());
+	}
+
+	public void fill(Graphics2D g, int radius) {
+		g.fillOval(intX()-radius, intY()-radius, radius*2, radius*2);
 	}
 
 }
