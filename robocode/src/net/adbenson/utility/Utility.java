@@ -26,7 +26,7 @@ public class Utility {
 		g.drawLine(x, y+start, x, y+end);
 	}
 	
-	public static double angleDifference(double a, double b) {
+	public static double angleDiff(double a, double b) {
 		double diff = a-b;
 		
 		if (diff > Math.PI) {
@@ -37,6 +37,10 @@ public class Utility {
 		}
 		
 		return diff;
+	}
+	
+	public static double angleSum(double a, double b) {
+		return (a + b) % TWO_PI;
 	}
 
 }

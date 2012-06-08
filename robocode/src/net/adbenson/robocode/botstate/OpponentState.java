@@ -42,10 +42,10 @@ public class OpponentState extends BotState<OpponentState> {
 		super(a, b, add);
 		
 		this.bearing = add? (a.bearing + b.bearing) : 
-			Utility.angleDifference(a.bearing, b.bearing);
+			Utility.angleDiff(a.bearing, b.bearing);
 		
 		this.absoluteBearing = add? (a.absoluteBearing + b.absoluteBearing) : 
-			Utility.angleDifference(a.absoluteBearing, b.absoluteBearing);
+			Utility.angleDiff(a.absoluteBearing, b.absoluteBearing);
 		
 		this.distance = a.distance + (add? b.distance : -b.distance);
 	}

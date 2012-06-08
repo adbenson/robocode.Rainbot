@@ -16,7 +16,7 @@ public class SelfState extends BotState<SelfState> {
 		super(a, b, add);
 		
 		this.gunHeading = add? (a.gunHeading + b.gunHeading) : 
-			Utility.angleDifference(a.gunHeading, b.gunHeading);
+			Utility.angleDiff(a.gunHeading, b.gunHeading);
 		
 		this.gunHeat = a.gunHeat + (add? b.gunHeat : -b.gunHeat);
 	}

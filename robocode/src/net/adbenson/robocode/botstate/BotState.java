@@ -62,7 +62,7 @@ public abstract class BotState<T extends BotState<T>> {
 				a.gunHeat + (add? b.gunHeat : -b.gunHeat),
 				
 				(add? a.heading + b.heading : 
-						Utility.angleDifference(a.heading, b.heading)),
+						Utility.angleDiff(a.heading, b.heading)),
 						
 				a.velocity + (add? b.velocity : -b.velocity),
 				
