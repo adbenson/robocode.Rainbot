@@ -18,9 +18,12 @@ public class SelfBullet extends Bullet {
 	
 	private final int colorIndex;
 	
+	private final robocode.Bullet originalBullet;
+	
 	public SelfBullet(SelfState self, OpponentState target, robocode.Bullet bullet, long time) {
 		super(self, target, bullet, time);
 		this.colorIndex = (nextColorIndex++) % COLOR_WHEEL;
+		this.originalBullet = bullet;
 	}
 
 	@Override
@@ -51,6 +54,11 @@ public class SelfBullet extends Bullet {
 	public void updateProjection() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean matches(robocode.Bullet b) {
+		return b.equals(originalBullet);
 	}
 
 }
