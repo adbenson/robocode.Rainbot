@@ -13,9 +13,12 @@ import robocode.Rules;
 
 public class OpponentBullet extends Bullet {
 	
+	private static final int BULLET_MATCHING_THRESHOLD = 5;
+	
 	private static final double TIME_FUDGE = 2.1;
 	
 	private Ellipse2D radius;
+	private Vector currentPosition;
 
 	public OpponentBullet(OpponentState opponent, SelfState self, long time) {
 		super(opponent, self, Utility.oppositeAngle(opponent.absoluteBearing), time);
@@ -36,7 +39,9 @@ public class OpponentBullet extends Bullet {
 		g.setColor(Utility.setAlpha(Color.white, 0.25));
 		g.draw(radius);
 
-		origin.drawTo(g, heading, getDistanceTravelled());
+//		origin.drawTo(g, heading, getDistanceTravelled());
+		
+		currentPosition.fill(g, 20);
 	}
 
 	@Override
@@ -48,5 +53,16 @@ public class OpponentBullet extends Bullet {
 	public void updateProjection() {
 		double radius = getDistanceTravelled();
 		this.radius = new Ellipse2D.Double(origin.x - radius, origin.y - radius, radius*2, radius*2);
+		this.currentPosition = 
+				origin.add(Vector.getVectorFromAngleAndLength(heading, getDistanceTravelled()));
+	}
+
+	@Override
+	public boolean matches(robocode.Bullet b) {
+		boolean samePower = Math.abs(b.getPower() - power) < Rules.MIN_BULLET_POWER; 
+		double distanceFromOrigin = new Vector(b.getX(), b.getY()).distance(origin);
+		double diff = Math.abs(distanceFromOrigin - getDistanceTravelled()); 
+System.out.println(diff);
+		return samePower && (diff <= BULLET_MATCHING_THRESHOLD);
 	}
 }
