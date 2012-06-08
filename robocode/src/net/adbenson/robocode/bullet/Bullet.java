@@ -1,13 +1,22 @@
 package net.adbenson.robocode.bullet;
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics2D;
+import java.util.LinkedList;
+import java.util.List;
 
 import net.adbenson.robocode.botstate.BotState;
+import net.adbenson.robocode.botstate.OpponentState;
+import net.adbenson.robocode.botstate.SelfState;
+import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
+import robocode.Rules;
 
 
 public abstract class Bullet {
 	
-	public final BotState<?> bot;
+	public final BotState<?> shooter;
+	public final BotState<?> target;
 	
 	public final Vector origin;
 	public final double power;
@@ -17,18 +26,24 @@ public abstract class Bullet {
 	
 	protected double distanceTravelled;
 	
-	public Bullet(BotState<?> bot, double heading, long time) {
-		this.bot = bot;
-		this.origin = bot.position;
-		this.power = -bot.change.energy;
+	private double escapeDistance;
+	
+	private List<Vector> escapePoints;
+	
+	public Bullet(OpponentState shooter, SelfState self, double heading, long time) {
+		this.shooter = shooter;
+		this.target = self;
+		this.origin = shooter.position;
+		this.power = -shooter.change.energy;
 		this.heading = heading;
 		this.time = time;
 		this.velocity = velocity();
 	}
 	
-	public Bullet(BotState<?> bot, robocode.Bullet bullet, long time) {
-		this.bot = bot;
-		this.origin = bot.position;
+	public Bullet(SelfState self, OpponentState target, robocode.Bullet bullet, long time) {
+		this.shooter = self;
+		this.target = target;
+		this.origin = shooter.position;
 		this.power = bullet.getPower();
 		this.heading = bullet.getHeadingRadians();
 		this.time = time;
@@ -41,10 +56,15 @@ public abstract class Bullet {
 		distanceTravelled = calculateDistanceTravelled(timeElapsed);
 		
 		updateProjection();
+		updateEscapeDistance();
 	}
 	
 	public double calculateDistanceTravelled(long time) {
 		return velocity * (time+1);
+	}
+	
+	public double turnsToTravel(double distance) {
+		return distance / velocity;
 	}
 
 	private double velocity() {
@@ -62,6 +82,34 @@ public abstract class Bullet {
     public double getDistanceTravelled() {
     	return distanceTravelled;
     }
+    
+	public void updateEscapeDistance() {
+		double directDistance = target.position.distance(origin);
+		
+		double turns = Math.ceil(turnsToTravel(directDistance));
+		
+		escapeDistance = Rules.MAX_VELOCITY * turns;
+
+		double angle = Utility.angleDifference(Utility.oppositeAngle(heading), Utility.HALF_PI);
+		
+		escapePoints = new LinkedList<Vector>();
+		for (int turn = (int) -turns; turn <= turns ; turn+=3) {
+			escapePoints.add(target.position.project(angle, turn * Rules.MAX_VELOCITY));
+		}
+	}
+	
+	public double getEscapeDistance() {
+		return escapeDistance;
+	}
+	
+	public void drawEscapePoints(Graphics2D g, Color c) {
+		g.setStroke(new BasicStroke(1));
+		g.setColor(Utility.setAlpha(c, 0.4));
+		
+		for(Vector point : escapePoints) {
+			point.fill(g, 2);
+		}
+	}
 
 	public abstract void draw(Graphics2D g);
 	
