@@ -2,7 +2,6 @@ package net.adbenson.robocode.rainbot;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.text.DecimalFormat;
@@ -32,7 +31,11 @@ import robocode.util.Utils;
 
 public class Rainbot extends AdvancedRobot {
 	
-	public static final double MAX_TURN = Math.PI / 5d;
+	public static final double TURN_FACTOR = 5.0;
+	
+	public static final double MAX_TURN_OFF_FACE = Math.PI / TURN_FACTOR;
+	
+	public static final double PREFERRED_DISTANCE = Rules.RADAR_SCAN_RADIUS / TURN_FACTOR;
 	
 	//Min: 0.03 will assure accuracy to the farthest point on the field
 	//Max: 0.15 will assure accuracy at 1/4 of field diagonal
@@ -46,12 +49,11 @@ public class Rainbot extends AdvancedRobot {
 	private PredictiveTargeting predictor;
 	
 	private int preferredDirection;
+	private Vector destination;
 	
 	private static Rectangle2D field;
-	private RoundRectangle2D safety;
-	private RoundRectangle2D preferredRadius;
-	
-	private double preferredDistance;
+	private RoundRectangle2D safetyArea;
+	private RoundRectangle2D preferredArea;
 	
 	private BotColor color;
 	
@@ -71,8 +73,6 @@ public class Rainbot extends AdvancedRobot {
 	
 	public void run() {
 		generateBoundries();
-		
-		preferredDistance = Rules.RADAR_SCAN_RADIUS / 3.0;		
 		
 		setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(true);
@@ -181,13 +181,13 @@ public class Rainbot extends AdvancedRobot {
 				getBattleFieldWidth()-(botSize.x), getBattleFieldHeight()-(botSize.y)
 		);
 		
-		safety = new RoundRectangle2D.Double(
+		safetyArea = new RoundRectangle2D.Double(
 				botSize.x, botSize.y, 
 				getBattleFieldWidth()-(botSize.x*2), getBattleFieldHeight()-(botSize.y*2),
 				175, 175
 		);
 		
-		preferredRadius = new RoundRectangle2D.Double(
+		preferredArea = new RoundRectangle2D.Double(
 				botSize.x*1.5, botSize.y*1.5, 
 				getBattleFieldWidth()-(botSize.x*3), getBattleFieldHeight()-(botSize.y*3),
 				250, 250
@@ -196,34 +196,40 @@ public class Rainbot extends AdvancedRobot {
 
 	private void setGunTurnToTarget(OpponentState target) {
 		Vector offset = target.position.subtract(getPosition());
-		double heading = Utility.angleDifference(offset.getAngle(), this.getGunHeadingRadians());
+		double heading = Utility.angleDiff(offset.getAngle(), this.getGunHeadingRadians());
 		this.setTurnGunRightRadians(heading);
 	}
 	
 	private void setTurnHeading(double heading) {
-		setTurnRight(Utility.angleDifference(heading, getHeadingRadians()));
+		setTurnRight(Utility.angleDiff(heading, getHeadingRadians()));
 	}
 	
 	private void faceOpponent() {
     	if (state.hasTarget()) {
     		OpponentState o = state.getTarget();
     		
-    		double offFace = o.bearing;
-    		//We don't care which direction we face, so treat either direction the same.
-    		if (offFace < 0) {
-    			offFace += Math.PI;
-    		}
-    		   		
-    		//Offset so that "facing" is 0
-    		offFace -= Utility.HALF_PI;
-    		
     		//Turn farther away the closer we are - by preferredDistance away, straighten out
-    		double distanceRatio = (preferredDistance - o.distance) / (preferredDistance);   		
-    		offFace += MAX_TURN * distanceRatio * preferredDirection;
-
-    		//Multiply the offset - we don't have all day! Move it! (If it's too high, it introduces jitter.)
-    		setTurnRight(offFace * 10); 
+    		//negative means turn away, positive means turn towards
+    		double distanceRatio = (o.distance - PREFERRED_DISTANCE) / (PREFERRED_DISTANCE);
+    		//How far we want to turn off-face
+    		double offFace = (distanceRatio * MAX_TURN_OFF_FACE) * preferredDirection; 		
     		
+    		double turn;
+    		//Opponent is on our left
+    		if (o.bearing < 0) {
+    			double diffFromNormal = Utility.angleSum(o.bearing, Utility.HALF_PI);
+    			
+    			turn = diffFromNormal - offFace;
+    		}
+    		//Opponent is on our right
+    		else {
+    			double diffFromNormal = Utility.angleDiff(o.bearing, Utility.HALF_PI);
+    			
+    			turn = diffFromNormal + offFace;
+    		}
+    		
+    		//Multiply the offset - we don't have all day! Move it! (If it's too high, it introduces jitter.)
+    		setTurnRight(turn * 10);     		
     	}
     	else {
     		//Nuthin' better to do...
@@ -266,30 +272,27 @@ public class Rainbot extends AdvancedRobot {
 	
 	private void dodge(OpponentBullet bullet) {
 		double move = bullet.getEscapeDistance() + stoppingTurns();
-//		double oppDistance = bullet.bot.position.distance(getPosition());
+		preferredDirection = -preferredDirection;
 		
-		int direction = 1;
-		
-		Vector destination = destination(direction, move);
+		destination = destination(preferredDirection, move);
 			
 		//See if our trajectory would take us outside the safety
-		if (!safety.contains(destination.toPoint())) {
-			destination = destination(direction, move);
+		if (!preferredArea.contains(destination.toPoint())) {
+			destination = destination(-preferredDirection, move);
 			
-			if (!safety.contains(destination.toPoint())) {
-				//Hm...
+			System.out.println("Forward not safe. Reversing");
+			if (!preferredArea.contains(destination.toPoint())) {
 				System.out.println("No safe path found");
 			}
-			else {
-				direction = -1;
-			}
+			
+			preferredDirection = -preferredDirection;
 		}
-	
-		setAhead(move * direction);
+		
+		setAhead(move * preferredDirection);
 	}
 	
 	private Vector destination(int direction, double distance) {
-		double heading = getHeading();
+		double heading = getHeadingRadians();
 		if (direction < 1) {
 			heading = Utility.oppositeAngle(heading);
 		}
@@ -327,10 +330,10 @@ public class Rainbot extends AdvancedRobot {
 		g.draw(field);
 		
 		g.setColor(Color.yellow);
-		g.draw(safety);
+		g.draw(safetyArea);
 		
 		g.setColor(Color.green);
-		g.draw(preferredRadius);
+		g.draw(preferredArea);
 		
 		g.setStroke(new BasicStroke(3));
 		
@@ -346,6 +349,12 @@ public class Rainbot extends AdvancedRobot {
 		state.getSelf().draw(g);
 		
 		predictor.drawPrediction(g);
+		
+		if (destination != null) {
+			g.setColor(preferredDirection > 0? Color.green : Color.red);
+			g.setStroke(new BasicStroke(3));
+			Utility.drawCrosshairs(g, destination, 2, 10);
+		}
 	}
 	
 	public void onScannedRobot(ScannedRobotEvent e) {
@@ -356,6 +365,7 @@ public class Rainbot extends AdvancedRobot {
 	
 	public void onRobotDeath(RobotDeathEvent event) {
 		state.getOpponent(event.getName()).died();
+		color.startRainbow();
 	}
 	
 	//Shot opponent with bullet
