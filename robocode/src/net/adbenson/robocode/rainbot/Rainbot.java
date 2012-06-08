@@ -90,6 +90,13 @@ public class Rainbot extends AdvancedRobot {
 	    do {
 	    	//Store the current state of this bot and any others scanned
 	    	state.addBots(this, foundOpponents);
+	    	
+	    	if (foundOpponents.isEmpty()) {
+	    		//Uh-oh... we've lost track of our opponent
+	    		System.out.print("Opponent Lost: ");
+	    		startRadarLock();
+	    	}
+	    	
 	    	//Reset the list of scanned robots
 	    	foundOpponents = new LinkedList<ScannedRobotEvent>();
 
@@ -103,7 +110,7 @@ public class Rainbot extends AdvancedRobot {
 	    		dodge(bullet);
 	    	}
 	    	
-	    	avoidWalls();
+//	    	avoidWalls();
 	    	
 	    	updateBulletStates();
 	    	
@@ -210,10 +217,10 @@ public class Rainbot extends AdvancedRobot {
     		//Offset so that "facing" is 0
     		offFace -= Utility.HALF_PI;
     		
-    		//Turn farther away the closer we are - by 1/2 field away, straighten out
-//    		double distanceRatio = (preferredDistance - o.distance) / (preferredDistance);   		
-//    		offFace += MAX_TURN * distanceRatio * preferredDirection;
-    		    		
+    		//Turn farther away the closer we are - by preferredDistance away, straighten out
+    		double distanceRatio = (preferredDistance - o.distance) / (preferredDistance);   		
+    		offFace += MAX_TURN * distanceRatio * preferredDirection;
+
     		//Multiply the offset - we don't have all day! Move it! (If it's too high, it introduces jitter.)
     		setTurnRight(offFace * 10); 
     		
@@ -248,21 +255,48 @@ public class Rainbot extends AdvancedRobot {
 		return focus;
 	}
 	
+	public static int accelerationTurns(int direction, double current) {
+		double changeInVelocity = ((direction * Rules.MAX_VELOCITY) - current);
+		return (int)Math.ceil(changeInVelocity / Rules.ACCELERATION);		
+	}
+	
+	public static int stoppingTurns() {
+		return (int)Math.ceil(Rules.MAX_VELOCITY / Rules.DECELERATION);
+	}
+	
 	private void dodge(OpponentBullet bullet) {
-
+		double move = bullet.getEscapeDistance() + stoppingTurns();
+//		double oppDistance = bullet.bot.position.distance(getPosition());
 		
-		setAhead(100 * preferredDirection);
-	}
-	
-	private void avoidWalls() {
-		if(!safety.contains(getPosition().toPoint())) {
-			Vector center = new Vector(field.getCenterX(), field.getCenterY());
-			Vector heading = center.subtract(getPosition());
-			setTurnHeading(heading.getAngle());
-			ahead(heading.magnitude());
+		int direction = 1;
+		
+		Vector destination = destination(direction, move);
+			
+		//See if our trajectory would take us outside the safety
+		if (!safety.contains(destination.toPoint())) {
+			destination = destination(direction, move);
+			
+			if (!safety.contains(destination.toPoint())) {
+				//Hm...
+				System.out.println("No safe path found");
+			}
+			else {
+				direction = -1;
+			}
 		}
+	
+		setAhead(move * direction);
 	}
 	
+	private Vector destination(int direction, double distance) {
+		double heading = getHeading();
+		if (direction < 1) {
+			heading = Utility.oppositeAngle(heading);
+		}
+		
+		return getPosition().project(heading, distance);
+	}
+
 	private double distanceFromCenter() {
 		Vector center = new Vector(field.getCenterX(), field.getCenterY());
 		return getPosition().distance(center);
@@ -278,6 +312,7 @@ public class Rainbot extends AdvancedRobot {
 	}
 	
 	private void startRadarLock() {
+		System.out.println("Searching for Opponent");
 	    setTurnRadarRightRadians(Double.POSITIVE_INFINITY);
 	}
 	
