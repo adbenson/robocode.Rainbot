@@ -90,7 +90,7 @@ public abstract class Bullet {
 		
 		escapeDistance = Rules.MAX_VELOCITY * turns;
 
-		double angle = Utility.angleDifference(Utility.oppositeAngle(heading), Utility.HALF_PI);
+		double angle = Utility.angleDiff(Utility.oppositeAngle(heading), Utility.HALF_PI);
 		
 		escapePoints = new LinkedList<Vector>();
 		for (int turn = (int) -turns; turn <= turns ; turn+=3) {
@@ -99,15 +99,18 @@ public abstract class Bullet {
 	}
 	
 	public double getEscapeDistance() {
+		updateEscapeDistance();
 		return escapeDistance;
 	}
 	
 	public void drawEscapePoints(Graphics2D g, Color c) {
-		g.setStroke(new BasicStroke(1));
-		g.setColor(Utility.setAlpha(c, 0.4));
-		
-		for(Vector point : escapePoints) {
-			point.fill(g, 2);
+		if (escapePoints != null) {
+			g.setStroke(new BasicStroke(1));
+			g.setColor(Utility.setAlpha(c, 0.4));
+			
+			for(Vector point : escapePoints) {
+				point.fill(g, 2);
+			}
 		}
 	}
 
