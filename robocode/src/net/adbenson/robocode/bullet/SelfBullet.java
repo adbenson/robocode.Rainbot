@@ -47,18 +47,22 @@ public class SelfBullet extends Bullet {
 
 	@Override
 	public boolean shouldDelete() {
-		return getDistanceTravelled() > Rainbot.getField().getWidth();
+		return this.getState() != Origin.TRAVELLING;
 	}
 
 	@Override
 	public void updateProjection() {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public boolean matches(robocode.Bullet b) {
 		return b.equals(originalBullet);
+	}
+
+	@Override
+	protected void terminate(robocode.Bullet b, Fate fate) {
+		this.setFate(fate);
 	}
 
 }

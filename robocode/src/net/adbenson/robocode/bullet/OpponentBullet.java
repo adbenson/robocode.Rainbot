@@ -19,6 +19,8 @@ public class OpponentBullet extends Bullet {
 	
 	private Ellipse2D radius;
 	private Vector currentPosition;
+	
+	private robocode.Bullet originalBullet;
 
 	public OpponentBullet(OpponentState opponent, SelfState self, long time) {
 		super(opponent, self, Utility.oppositeAngle(opponent.absoluteBearing), time);
@@ -46,7 +48,13 @@ public class OpponentBullet extends Bullet {
 
 	@Override
 	public boolean shouldDelete() {
-		return radius.contains(Rainbot.getField());
+		boolean outOfField = radius.contains(Rainbot.getField());
+		
+		if (outOfField) {
+			setFate(Fate.MISSED);
+		}
+		
+		return outOfField;
 	}
 
 	@Override
@@ -59,10 +67,17 @@ public class OpponentBullet extends Bullet {
 
 	@Override
 	public boolean matches(robocode.Bullet b) {
-		boolean samePower = Math.abs(b.getPower() - power) < Rules.MIN_BULLET_POWER; 
+		boolean samePower = Math.abs(b.getPower() - power) < Rules.MIN_BULLET_POWER;
+		
 		double distanceFromOrigin = new Vector(b.getX(), b.getY()).distance(origin);
-		double diff = Math.abs(distanceFromOrigin - getDistanceTravelled()); 
-System.out.println(diff);
+		double diff = Math.abs(distanceFromOrigin - getDistanceTravelled());
+		
 		return samePower && (diff <= BULLET_MATCHING_THRESHOLD);
+	}
+
+	@Override
+	protected void terminate(robocode.Bullet b, Fate fate) {
+		this.originalBullet = b; 
+		this.setFate(fate);
 	}
 }

@@ -9,6 +9,7 @@ import java.util.LinkedList;
 
 import net.adbenson.robocode.botstate.BattleState;
 import net.adbenson.robocode.botstate.OpponentState;
+import net.adbenson.robocode.bullet.Bullet;
 import net.adbenson.robocode.bullet.BulletQueue;
 import net.adbenson.robocode.bullet.OpponentBullet;
 import net.adbenson.robocode.prediction.ImpossibleToSeeTheFutureIsException;
@@ -147,7 +148,7 @@ public class Rainbot extends AdvancedRobot {
 		    	}
 	    		
 		    	if (state.getTarget().isAlive() && ready && aim && !fire) {
-		    		setFire(requiredFirepower);   		
+		    		setFire(requiredFirepower);   			
 		    		ready = false;
 		    		aim = false;
 		    		fire = true;
@@ -272,27 +273,40 @@ public class Rainbot extends AdvancedRobot {
 	
 	private void dodge(OpponentBullet bullet) {
 		double move = bullet.getEscapeDistance() + stoppingTurns();
-		preferredDirection = -preferredDirection;
+//		preferredDirection = -preferredDirection;
 		
-		destination = destination(preferredDirection, move);
+		destination = getDestination(preferredDirection, move);
 			
 		//See if our trajectory would take us outside the safety
 		if (!preferredArea.contains(destination.toPoint())) {
-			destination = destination(-preferredDirection, move);
+			destination = getDestination(-preferredDirection, move);
 			
 			System.out.println("Forward not safe. Reversing");
 			if (!preferredArea.contains(destination.toPoint())) {
-				System.out.println("No safe path found");
+				System.out.println("Backed into a corner!");
+				
+				double heading = getHeadingRadians();
+				
+				do {
+					heading += 0.1;
+					destination = getDestination(heading, preferredDirection, move);
+				} while(!preferredArea.contains(destination.toPoint()));
+				
+				setTurnHeading(heading);
 			}
-			
-			preferredDirection = -preferredDirection;
+			else {
+				preferredDirection = -preferredDirection;
+			}
 		}
 		
 		setAhead(move * preferredDirection);
 	}
 	
-	private Vector destination(int direction, double distance) {
-		double heading = getHeadingRadians();
+	private Vector getDestination(int direction, double distance) {
+		return getDestination(getHeadingRadians(), direction, distance);
+	}
+	
+	private Vector getDestination(double heading, int direction, double distance) {
 		if (direction < 1) {
 			heading = Utility.oppositeAngle(heading);
 		}
@@ -374,23 +388,24 @@ public class Rainbot extends AdvancedRobot {
 		predictor.hitTarget(event.getName());
 		state.getOpponent(event.getName()).shotBySelf();
 		
-		state.getSelfBullets().remove(event.getBullet());
-	}
-	
-	public void onBulletHitBullet(BulletHitBulletEvent event) {
-		state.getSelfBullets().remove(event.getBullet());
-		state.getOpponentBullets(event.getBullet().getName()).remove(event.getBullet());	
-	}
-	
-	public void onBulletMissed(BulletMissedEvent event) {
-//		state.getSelfBullets().remove(event.getBullet());
-		predictor.missedTarget(event.getBullet());
+		state.getSelfBullets().terminate(event.getBullet(), Bullet.Fate.HIT_TARGET);
 	}
 	
 	//Shot by opponent
 	public void onHitByBullet(HitByBulletEvent event) {
-		state.getOpponentBullets(event.getBullet().getName()).remove(event.getBullet());
+		state.getOpponentBullets(event.getBullet().getName()).terminate(event.getBullet(), Bullet.Fate.HIT_TARGET);
 		//TODO track hit/miss rate
+	}
+	
+	public void onBulletHitBullet(BulletHitBulletEvent event) {
+		state.getSelfBullets().terminate(event.getBullet(), Bullet.Fate.HIT_BULLET);
+		robocode.Bullet opponentBullet = event.getHitBullet();
+		state.getOpponentBullets(opponentBullet.getName()).terminate(opponentBullet, Bullet.Fate.HIT_BULLET);	
+	}
+	
+	public void onBulletMissed(BulletMissedEvent event) {
+		state.getSelfBullets().terminate(event.getBullet(), Bullet.Fate.MISSED);
+		predictor.missedTarget(event.getBullet());
 	}
 	
 	//Collision with self
