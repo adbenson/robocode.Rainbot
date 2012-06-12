@@ -15,6 +15,19 @@ import robocode.Rules;
 
 public abstract class Bullet {
 	
+	public static interface State {
+	}
+	
+	public static enum Origin implements State {
+		TRAVELLING
+	}
+	
+	public static enum Fate implements State {
+		HIT_TARGET,
+		HIT_BULLET,
+		MISSED
+	}
+	
 	public final BotState<?> shooter;
 	public final BotState<?> target;
 	
@@ -23,6 +36,8 @@ public abstract class Bullet {
 	public final double heading;
 	public final long time;
 	public final double velocity;
+	
+	private State state;
 	
 	protected double distanceTravelled;
 	
@@ -38,6 +53,7 @@ public abstract class Bullet {
 		this.heading = heading;
 		this.time = time;
 		this.velocity = velocity();
+		this.state = Origin.TRAVELLING;
 	}
 	
 	public Bullet(SelfState self, OpponentState target, robocode.Bullet bullet, long time) {
@@ -48,9 +64,10 @@ public abstract class Bullet {
 		this.heading = bullet.getHeadingRadians();
 		this.time = time;
 		this.velocity = bullet.getVelocity();
+		this.state = Origin.TRAVELLING;
 	}
 
-	public void updateDistance(long currentTime) {
+	protected void updateDistance(long currentTime) {
 		long timeElapsed = currentTime - time;
 		//A lot of trial and error to get this fudge factor right!
 		distanceTravelled = calculateDistanceTravelled(timeElapsed);
@@ -83,7 +100,7 @@ public abstract class Bullet {
     	return distanceTravelled;
     }
     
-	public void updateEscapeDistance() {
+    protected void updateEscapeDistance() {
 		double directDistance = target.position.distance(origin);
 		
 		double turns = Math.ceil(turnsToTravel(directDistance));
@@ -120,6 +137,16 @@ public abstract class Bullet {
 	
     public abstract void updateProjection();
     
-	public abstract boolean matches(robocode.Bullet b); 
+	public abstract boolean matches(robocode.Bullet b);
+	
+	protected abstract void terminate(robocode.Bullet b, Fate fate);
+
+	protected void setFate(Fate fate) {
+		this.state = fate;
+	}
+	
+	public State getState() {
+		return state;
+	}
 	
 }
