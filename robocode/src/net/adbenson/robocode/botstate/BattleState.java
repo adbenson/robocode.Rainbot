@@ -46,10 +46,10 @@ public class BattleState {
 			if (opponentStates.containsKey(name)) {
 				OpponentState currentOpponent = opponentStates.get(name);
 				
-				newOpponentState = new OpponentState(opponent, currentOpponent, self);
+				newOpponentState = new OpponentState(opponent, currentOpponent, selfState);
 			}
 			else {
-				newOpponentState = new OpponentState(opponent, self);
+				newOpponentState = new OpponentState(opponent, selfState);
 			}
 			
 			opponentStates.put(name, newOpponentState);

@@ -8,7 +8,6 @@ import net.adbenson.robocode.prediction.PredictiveTargeting;
 import net.adbenson.robocode.rainbot.Rainbot;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
-import robocode.AdvancedRobot;
 import robocode.Rules;
 import robocode.ScannedRobotEvent;
 
@@ -18,6 +17,8 @@ public class OpponentState extends BotState<OpponentState> {
 	public final double absoluteBearing;
 	public final double distance;
 	
+	private final SelfState self;
+	
 	private boolean shotBySelf;
 	private boolean collidedWithSelf;
 	
@@ -26,11 +27,12 @@ public class OpponentState extends BotState<OpponentState> {
 	//Full constructor. Specify all the fields
 	public OpponentState(
 			String name, double energy, double gunHeat,
-			double heading, double velocity, 
-			Vector position, OpponentState previous, 
+			double heading, double velocity, Vector position, 
+			SelfState self, OpponentState previous, 
 			double bearing, double absoluteBearing, double distance, 
 			long turn, boolean alive) {
 		super(name, energy, gunHeat, heading, velocity, position, previous, turn);
+		this.self = self;
 		this.bearing = bearing;
 		this.absoluteBearing = absoluteBearing;
 		this.distance = distance;
@@ -48,38 +50,42 @@ public class OpponentState extends BotState<OpponentState> {
 			Utility.angleDiff(a.absoluteBearing, b.absoluteBearing);
 		
 		this.distance = a.distance + (add? b.distance : -b.distance);
+		
+		this.self = null;
 	}
 
 	//Initial constructor, used when no previous state is known.
-	public OpponentState(ScannedRobotEvent event, AdvancedRobot self) {
+	public OpponentState(ScannedRobotEvent event, SelfState self) {
 		this(event, null, self);
 	}
 
 	//Subsequent constructor. Used to create all new states after the first
-	public OpponentState(ScannedRobotEvent current, OpponentState previous, AdvancedRobot self) {		
+	public OpponentState(ScannedRobotEvent current, OpponentState previous, SelfState self) {		
 		super(
 				current.getName(),
 				current.getEnergy(),
-				previous==null? 3 : Math.max(0, previous.gunHeat - self.getGunCoolingRate()),
+				previous==null? 3 : Math.max(0, previous.gunHeat - Rainbot.getGlobalGunCoolingRate()),
 				current.getHeadingRadians(),
 				current.getVelocity(),
 				calculatePosition(current, self), 
 				previous,
-				self.getTime()
+				self.turn
 		);
 		
 		this.bearing = current.getBearingRadians();
 		this.absoluteBearing = absoluteBearing(self, current);
 		this.distance = current.getDistance();
 		this.alive = previous==null? true : previous.alive; //What is dead can never die
+		
+		this.self = null;
 	}	
 
-	private static Vector calculatePosition(ScannedRobotEvent current, AdvancedRobot self) {
+	private static Vector calculatePosition(ScannedRobotEvent current, SelfState self) {
 		double absoluteBearing = absoluteBearing(self, current);
 		
 		Vector relative = Vector.getVectorFromAngleAndLength(absoluteBearing, current.getDistance());
 
-		return relative.add(new Vector(self.getX(), self.getY()));
+		return relative.add(self.position);
 	}
 	
 	public LinkedList<OpponentState> predictStates(OpponentState basis, int nTurns) throws PredictiveStateUnavailableException{
@@ -102,8 +108,9 @@ public class OpponentState extends BotState<OpponentState> {
 //			Vector position, OpponentState previous, 
 //			double bearing, double absoluteBearing, double distance
 			nextState = new OpponentState(
-					"Prediction", energy, 0, newHeading, newVelocity,
-					newPosition, nextState,
+					"Prediction", energy, 0, 
+					newHeading, newVelocity, newPosition, 
+					null, nextState,
 					0, 0, 0,
 					-1, false
 			);
@@ -125,8 +132,8 @@ public class OpponentState extends BotState<OpponentState> {
 		return new OpponentState(this, b, true);
 	}
 	
-	private static double absoluteBearing(AdvancedRobot self, ScannedRobotEvent current) {
-		return self.getHeadingRadians() + current.getBearingRadians();
+	private static double absoluteBearing(SelfState self, ScannedRobotEvent current) {
+		return self.heading + current.getBearingRadians();
 	}
 	
 	public void drawPath(Graphics2D g, int index) {

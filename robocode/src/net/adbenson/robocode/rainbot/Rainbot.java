@@ -43,6 +43,8 @@ public class Rainbot extends AdvancedRobot {
 	//Lower will increase likelihood of waiting additional turns for gun to turn
 	public static final double ACCEPTABLE_GUN_OFFTARGET = 0.07;
 	
+	private static double gunCoolingRate;
+	
 	private BattleState state;
 	
 	public LinkedList<ScannedRobotEvent> foundOpponents;
@@ -74,6 +76,7 @@ public class Rainbot extends AdvancedRobot {
 	
 	public void run() {
 		generateBoundries();
+		gunCoolingRate = this.getGunCoolingRate();
 		
 		setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(true);
@@ -419,5 +422,9 @@ public class Rainbot extends AdvancedRobot {
 	
 	public static Rectangle2D getField() {
 		return field;
+	}
+	
+	public static double getGlobalGunCoolingRate() {
+		return gunCoolingRate;
 	}
 }
