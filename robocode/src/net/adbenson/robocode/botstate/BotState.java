@@ -5,13 +5,16 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.text.DecimalFormat;
 
+import net.adbenson.robocode.bullet.Bullet;
 import net.adbenson.robocode.prediction.PredictiveTargeting;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
 import robocode.ScannedRobotEvent;
 
-public abstract class BotState<T extends BotState<T>> {
+public abstract class BotState
+	<BulletType extends Bullet, 
+	BotType extends BotState<BulletType, BotType>> {
 	
 	public static final double INITIAL_GUN_HEAT = 3.0;
 	
@@ -23,16 +26,18 @@ public abstract class BotState<T extends BotState<T>> {
 	public final double turn;
 	public double gunHeat;
 	
-	public final T previous;
-	private T next;
-	public final T change;
+	public final BotType previous;
+	private BotType next;
+	public final BotType change;
+	
+	private BulletType shotBullet;
 	
 	@SuppressWarnings("unchecked")
 	protected BotState(
 			String name, 
 			double energy, double gunHeat, double heading, 
 			double velocity, Vector position, 
-			T previous, double turn) {
+			BotType previous, double turn) {
 		this.name = name;
 		this.energy = energy;
 		this.gunHeat = gunHeat;
@@ -47,13 +52,13 @@ public abstract class BotState<T extends BotState<T>> {
 		}
 		else {
 			change = this.diff(previous);
-			((BotState<T>)previous).next = (T) this;
+			((BotState<BulletType, BotType>)previous).next = (BotType) this;
 		}
 		
 		next = null;
 	}
 	
-	protected <U extends BotState<U>>BotState(U a, U b, boolean add) {
+	protected <_BotState extends BotState<?, _BotState>>BotState(_BotState a, _BotState b, boolean add) {
 		this(
 				b.name+"_DIFF",
 				
@@ -86,7 +91,7 @@ public abstract class BotState<T extends BotState<T>> {
 		);
 	}
 	
-	public BotState(AdvancedRobot bot, T previous) {
+	public BotState(AdvancedRobot bot, BotType previous) {
 		this(
 				bot.getName(),
 				bot.getEnergy(),
@@ -103,13 +108,13 @@ public abstract class BotState<T extends BotState<T>> {
 		return position;
 	}
 	
-	public T getNext() {
+	public BotType getNext() {
 		return next;
 	}
 	
-	public abstract T diff(T state);
+	public abstract BotType diff(BotType state);
 	
-	public abstract T sum(T state);
+	public abstract BotType sum(BotType state);
 	
 	/**
 	 * Guess if the bot has just stopped
@@ -120,7 +125,7 @@ public abstract class BotState<T extends BotState<T>> {
 		return (Math.abs(velocity) < 0.01 && Math.abs(change.velocity) > 0.01);
 	}
 		
-	public T previousState(int n) {
+	public BotType previousState(int n) {
 		if (n <= 1 || previous == null) {
 			return previous;
 		}
@@ -129,15 +134,15 @@ public abstract class BotState<T extends BotState<T>> {
 		}
 	}
 	
-	public T matchStateSequence(int turnsToMatch, int lookahead, StateMatchComparator<T> compare) {
+	public BotType matchStateSequence(int turnsToMatch, int lookahead, StateMatchComparator<BotType> compare) {
 		//Initialize the first reference state
 		@SuppressWarnings("unchecked")
-		T reference = (T) this;
+		BotType reference = (BotType) this;
 		//Find the first match candidate - far enough into history that there's enough to replicate
-		T test = previousState(lookahead);
+		BotType test = previousState(lookahead);
 		
 		//Initialize the bestMatch and best comparison
-		T bestMatch = null;
+		BotType bestMatch = null;
 		double bestMatchDifference = Double.POSITIVE_INFINITY;
 		
 		//Start looping through test states
@@ -172,7 +177,7 @@ public abstract class BotState<T extends BotState<T>> {
 		return bestMatch;
 	}
 	
-	public double compareStates(T reference, T test, int nStates, StateMatchComparator<T> compare) 
+	public double compareStates(BotType reference, BotType test, int nStates, StateMatchComparator<BotType> compare) 
 			throws StateComparisonUnavailableException {
 		double difference = 0;
 		
@@ -195,8 +200,8 @@ public abstract class BotState<T extends BotState<T>> {
 		
 	}
 	
-	public interface StateMatchComparator<U extends BotState<U>> {
-		public double compare(U test, U reference) throws StateComparisonUnavailableException;
+	public interface StateMatchComparator<_BotState extends BotState<?, _BotState>> {
+		public double compare(_BotState test, _BotState reference) throws StateComparisonUnavailableException;
 	}
 	
 	public void drawGunHeat(Graphics2D g) {
@@ -215,6 +220,14 @@ public abstract class BotState<T extends BotState<T>> {
 					position.intX() - 30, (position.intY() - 30) + (int)((gunHeat / 1.6) * 30)
 			);
 		}
+	}
+
+	protected void setShotBullet(BulletType shotBullet) {
+		this.shotBullet = shotBullet;
+	}
+
+	public BulletType getShotBullet() {
+		return shotBullet;
 	}
 
 }

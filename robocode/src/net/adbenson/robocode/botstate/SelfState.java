@@ -4,10 +4,11 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
+import net.adbenson.robocode.bullet.SelfBullet;
 import net.adbenson.utility.Utility;
 import robocode.AdvancedRobot;
 
-public class SelfState extends BotState<SelfState> {
+public class SelfState extends BotState<SelfBullet, SelfState> {
 
 	public final double gunHeading;
 	public final double gunHeat;

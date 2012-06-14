@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.LinkedList;
 
+import net.adbenson.robocode.bullet.OpponentBullet;
 import net.adbenson.robocode.prediction.PredictiveTargeting;
 import net.adbenson.robocode.rainbot.Rainbot;
 import net.adbenson.utility.Utility;
@@ -11,7 +12,7 @@ import net.adbenson.utility.Vector;
 import robocode.Rules;
 import robocode.ScannedRobotEvent;
 
-public class OpponentState extends BotState<OpponentState> {
+public class OpponentState extends BotState<OpponentBullet, OpponentState> {
 	
 	public final double bearing;
 	public final double absoluteBearing;
@@ -220,4 +221,5 @@ public class OpponentState extends BotState<OpponentState> {
 
 	@SuppressWarnings("serial")
 	public class PredictiveStateUnavailableException extends Exception {}
+
 }
