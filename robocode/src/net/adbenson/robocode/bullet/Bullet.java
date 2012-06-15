@@ -13,7 +13,9 @@ import net.adbenson.utility.Vector;
 import robocode.Rules;
 
 
-public abstract class Bullet {
+public abstract class Bullet
+	<BotType extends BotState<?, BotType>, 
+	OtherBotType extends BotState<?, OtherBotType>> {
 	
 	public static interface State {
 	}
@@ -28,8 +30,8 @@ public abstract class Bullet {
 		MISSED
 	}
 	
-	public final BotState<?> shooter;
-	public final BotState<?> target;
+	public final BotType shooter;
+	public final OtherBotType target;
 	
 	public final Vector origin;
 	public final double power;

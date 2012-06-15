@@ -9,7 +9,7 @@ import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 
 
-public class SelfBullet extends Bullet {
+public class SelfBullet extends Bullet<SelfState, OpponentState> {
 	
 	private static final int COLOR_WHEEL = 5;
 	private static final float COLOR_RATIO = 1f / COLOR_WHEEL;

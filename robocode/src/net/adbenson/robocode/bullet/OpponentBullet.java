@@ -11,7 +11,7 @@ import net.adbenson.utility.Vector;
 import robocode.Rules;
 
 
-public class OpponentBullet extends Bullet {
+public class OpponentBullet extends Bullet<OpponentState, SelfState> {
 	
 	private static final int BULLET_MATCHING_THRESHOLD = 5;
 	
