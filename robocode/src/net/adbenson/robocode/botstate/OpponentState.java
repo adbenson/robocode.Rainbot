@@ -5,8 +5,8 @@ import java.awt.Graphics2D;
 import java.util.LinkedList;
 
 import net.adbenson.robocode.bullet.OpponentBullet;
-import net.adbenson.robocode.prediction.PredictiveTargeting;
 import net.adbenson.robocode.rainbot.Rainbot;
+import net.adbenson.robocode.targeting.PredictiveTargeting;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.Rules;

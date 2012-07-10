@@ -6,7 +6,7 @@ import java.awt.Graphics2D;
 import java.text.DecimalFormat;
 
 import net.adbenson.robocode.bullet.Bullet;
-import net.adbenson.robocode.prediction.PredictiveTargeting;
+import net.adbenson.robocode.targeting.PredictiveTargeting;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;

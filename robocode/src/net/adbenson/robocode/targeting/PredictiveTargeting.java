@@ -1,4 +1,4 @@
-package net.adbenson.robocode.prediction;
+package net.adbenson.robocode.targeting;
 
 import java.awt.Graphics2D;
 import java.text.DecimalFormat;

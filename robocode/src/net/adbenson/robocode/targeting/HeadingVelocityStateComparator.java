@@ -1,4 +1,4 @@
-package net.adbenson.robocode.prediction;
+package net.adbenson.robocode.targeting;
 
 import net.adbenson.robocode.botstate.BotState.StateComparisonUnavailableException;
 import net.adbenson.robocode.botstate.BotState.StateMatchComparator;

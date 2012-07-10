@@ -1,4 +1,4 @@
-package net.adbenson.robocode.prediction;
+package net.adbenson.robocode.targeting;
 
 import java.util.Comparator;
 
