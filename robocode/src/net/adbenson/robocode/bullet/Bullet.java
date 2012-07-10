@@ -47,7 +47,7 @@ public abstract class Bullet
 	
 	private List<Vector> escapePoints;
 	
-	public Bullet(OpponentState shooter, SelfState self, double heading, long time) {
+	public Bullet(BotType shooter, OtherBotType self, double heading, long time) {
 		this.shooter = shooter;
 		this.target = self;
 		this.origin = shooter.position;
@@ -58,7 +58,7 @@ public abstract class Bullet
 		this.state = Origin.TRAVELLING;
 	}
 	
-	public Bullet(SelfState self, OpponentState target, robocode.Bullet bullet, long time) {
+	public Bullet(BotType self, OtherBotType target, robocode.Bullet bullet, long time) {
 		this.shooter = self;
 		this.target = target;
 		this.origin = shooter.position;
