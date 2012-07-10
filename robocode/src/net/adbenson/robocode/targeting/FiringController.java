@@ -3,8 +3,6 @@ package net.adbenson.robocode.targeting;
 import java.text.DecimalFormat;
 
 import net.adbenson.robocode.botstate.OpponentState;
-import net.adbenson.robocode.rainbot.Rainbot;
-import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 
 public class FiringController {
@@ -16,56 +14,28 @@ public class FiringController {
 	
 	private PredictedTarget target;
     
-	private boolean ready;
-	private boolean aim;
-	private boolean fire;
+	private boolean targeted;
+	private boolean aimed;
 	
-	private Rainbot self;
+	private final double gunCoolingRate;
 	
-	public FiringController() {	    
-		ready = true;
-		aim = false;
-		fire = false;
-	}
-	
-	public double fire() {
- 			
-		ready = false;
-		aim = false;
-		fire = true;
+	public FiringController(double gunCoolingRate) {	    
+		targeted = false;
+		aimed = false;
 		
-		System.out.println("Shot @"+
-				new DecimalFormat("0.00").format(target.requiredPower));
-		
-		return target.requiredPower;  
+		this.gunCoolingRate = gunCoolingRate;
 	}
 	
-	public void aim() {
-		setGunTurnToTarget(target.target);
-		
-    	if (ready && 
-    			Math.abs(self.getGunTurnRemainingRadians()) < ACCEPTABLE_GUN_OFFTARGET &&
-    			self.getGunHeat() <= 0) {	    		
-    		aim = true;
-    		fire = false;
-    	}
+    public boolean readyToTarget(double gunHeat) {
+    	return !targeted && gunHeat <= gunCoolingRate;
 	}
 	
-	private void setGunTurnToTarget(OpponentState target) {
-		Vector offset = target.position.subtract(self.getPosition());
-		double heading = Utility.angleDiff(offset.getAngle(), self.getGunHeadingRadians());
-		self.setTurnGunRightRadians(heading);
-	}
-	
-    public boolean readyToTarget() {
-    	return !ready && self.getGunHeat() <= self.getGunCoolingRate();
-	}
-
-	public void predictTarget(PredictiveTargeting predictor, long turn) {
+	public OpponentState target(PredictiveTargeting predictor, Vector position) {		
 		try {
-			target = predictor.getNewTarget(self.getPosition());	
-
-			ready = true;
+			target = predictor.getNewTarget(position);	
+			targeted = true;
+			
+			return target.target;
 			
 		} catch (TargetOutOfRangeException e) {
 			System.out.println("Predicted target unreachable");
@@ -73,16 +43,31 @@ public class FiringController {
 			System.out.println("Prediction failed: ("+e.getMessage()+")");
 		}
 		
-		aim = false;
-		fire = false;
+		return null;
 	}
-
-	public boolean readyToFire() {
-		return ready && aim && !fire;
-	}
-
+	
 	public boolean targetAquired() {
-		return target != null && ready;
+		return targeted && !aimed;
 	}
+	
+	public void checkAim(double turnRemaining) {
+		aimed = Math.abs(turnRemaining) < ACCEPTABLE_GUN_OFFTARGET;
+	}
+	
+	public boolean readyToFire(double gunHeat) {
+		return aimed && gunHeat <= 0;
+	}
+	
+	public double fire() {
+		targeted = false;
+		aimed = false;
+		
+		System.out.println("Shot @"+
+				new DecimalFormat("0.00").format(target.requiredPower));
+		
+		return target.requiredPower;  
+	}
+	
 
+	
 }

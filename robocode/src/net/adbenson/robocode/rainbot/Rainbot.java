@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
-import java.text.DecimalFormat;
 import java.util.LinkedList;
 
 import net.adbenson.robocode.botstate.BattleState;
@@ -12,10 +11,8 @@ import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.bullet.Bullet;
 import net.adbenson.robocode.bullet.BulletQueue;
 import net.adbenson.robocode.bullet.OpponentBullet;
-import net.adbenson.robocode.targeting.ImpossibleToSeeTheFutureIsException;
-import net.adbenson.robocode.targeting.PredictedTarget;
+import net.adbenson.robocode.targeting.FiringController;
 import net.adbenson.robocode.targeting.PredictiveTargeting;
-import net.adbenson.robocode.targeting.TargetOutOfRangeException;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
 import robocode.AdvancedRobot;
@@ -37,12 +34,7 @@ public class Rainbot extends AdvancedRobot {
 	public static final double MAX_TURN_OFF_FACE = Math.PI / TURN_FACTOR;
 	
 	public static final double PREFERRED_DISTANCE = Rules.RADAR_SCAN_RADIUS / (TURN_FACTOR / 2.0);
-	
-	//Min: 0.03 will assure accuracy to the farthest point on the field
-	//Max: 0.15 will assure accuracy at 1/4 of field diagonal
-	//Lower will increase likelihood of waiting additional turns for gun to turn
-	public static final double ACCEPTABLE_GUN_OFFTARGET = 0.07;
-	
+		
 	private static double gunCoolingRate;
 	
 	private BattleState state;
@@ -60,6 +52,8 @@ public class Rainbot extends AdvancedRobot {
 	
 	private BotColor color;
 	
+	private FiringController firingController;
+	
 	public Rainbot() {
 		super();
 		
@@ -72,6 +66,8 @@ public class Rainbot extends AdvancedRobot {
 		color = new BotColor();
 		
 		foundOpponents = new LinkedList<ScannedRobotEvent>();
+		
+		firingController = new FiringController(getGunCoolingRate());
 	}
 	
 	public void run() {
@@ -83,13 +79,6 @@ public class Rainbot extends AdvancedRobot {
 		setAdjustRadarForRobotTurn(true);
 	    
 	    startRadarLock();
-	    
-	    double requiredFirepower = 0;
-		boolean ready = false;
-		boolean aim = false;
-		boolean fire = false;
-		
-		long turnTargeted = 0;
 	    
 	    do {
 	    	//Store the current state of this bot and any others scanned
@@ -114,55 +103,22 @@ public class Rainbot extends AdvancedRobot {
 	    		dodge(bullet);
 	    	}
 	    	
-//	    	avoidWalls();
-	    	
 	    	updateBulletStates();
 	    	
-	    	if (predictor.canPredict(getTime())) {
-	    		//TODO decide to predict when the opponent stops moving
-
-		    	//ONLY look into prediction if we're not preparing to fire or have recently fired 
-	    		if (!ready && this.getGunHeat() <= getGunCoolingRate()) {
-	    			
-					try {
-						PredictedTarget target = predictor.getNewTarget(getPosition());
-
-						requiredFirepower = target.requiredPower;
-						setGunTurnToTarget(target.target);
-
-						ready = true;
-						turnTargeted = getTime();
-						
-					} catch (TargetOutOfRangeException e) {
-						System.out.println("Predicted target unreachable");
-					} catch (ImpossibleToSeeTheFutureIsException e) {
-						System.out.println("Prediction failed: ("+e.getMessage()+")");
-					}
-		    		
-	    			aim = false;
-	    			fire = false;
-	    		}   	
-	    		
-		    	if (ready && 
-		    			Math.abs(this.getGunTurnRemainingRadians()) < ACCEPTABLE_GUN_OFFTARGET &&
-		    			this.getGunHeat() <= 0) {	    		
-		    		aim = true;
-		    		fire = false;
-		    	}
-	    		
-		    	if (state.getTarget().isAlive() && ready && aim && !fire) {
-		    		setFire(requiredFirepower);   			
-		    		ready = false;
-		    		aim = false;
-		    		fire = true;
-		    		
-		    		System.out.println("Shot @"+
-		    				new DecimalFormat("0.00").format(requiredFirepower)+" with delay of "+
-		    				(getTime()-turnTargeted)+" turns");
-		    	}
-
-	    	
+	    	if (firingController.readyToTarget(getGunHeat()) && predictor.canPredict(getTime())) {
+	    		OpponentState target = firingController.target(predictor, getPosition());
+	    		if (target != null) {
+	    			setGunTurnToTarget(target);
+	    		}
 	    	}
+	    	
+	    	if (firingController.targetAquired()) {
+	    		firingController.checkAim(getGunTurnRemainingRadians());	    		
+	    	}
+	    	
+	    	if (firingController.readyToFire(getGunHeat()) && state.getTarget().isAlive()) {
+	    		setFire(firingController.fire());
+	    	}	    	
 
 	    	execute();
 
@@ -175,6 +131,12 @@ public class Rainbot extends AdvancedRobot {
     	for(BulletQueue<OpponentBullet> queue: state.getAllOpponentBullets()) {
     		queue.updateAll(getTime());
     	}	  
+	}
+	
+	private void setGunTurnToTarget(OpponentState target) {
+		Vector offset = target.position.subtract(getPosition());
+		double heading = Utility.angleDiff(offset.getAngle(), getGunHeadingRadians());
+		setTurnGunRightRadians(heading);
 	}
 
 	private void generateBoundries() {
@@ -196,12 +158,6 @@ public class Rainbot extends AdvancedRobot {
 				getBattleFieldWidth()-(botSize.x*3), getBattleFieldHeight()-(botSize.y*3),
 				250, 250
 		);
-	}
-
-	private void setGunTurnToTarget(OpponentState target) {
-		Vector offset = target.position.subtract(getPosition());
-		double heading = Utility.angleDiff(offset.getAngle(), this.getGunHeadingRadians());
-		this.setTurnGunRightRadians(heading);
 	}
 	
 	private void setTurnHeading(double heading) {
@@ -322,7 +278,7 @@ public class Rainbot extends AdvancedRobot {
 		return getPosition().distance(center);
 	}
 
-	private Vector getPosition() {
+	public Vector getPosition() {
 		return new Vector(getX(), getY());
 	}
 	
