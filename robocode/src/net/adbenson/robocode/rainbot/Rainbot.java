@@ -67,12 +67,14 @@ public class Rainbot extends AdvancedRobot {
 		
 		foundOpponents = new LinkedList<ScannedRobotEvent>();
 		
-		firingController = new FiringController(getGunCoolingRate());
+		firingController = new FiringController();
 	}
 	
 	public void run() {
 		generateBoundries();
 		gunCoolingRate = this.getGunCoolingRate();
+		
+		firingController.setGunCoolingRate(gunCoolingRate);
 		
 		setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(true);

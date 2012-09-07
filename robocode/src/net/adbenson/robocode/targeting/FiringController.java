@@ -17,13 +17,11 @@ public class FiringController {
 	private boolean targeted;
 	private boolean aimed;
 	
-	private final double gunCoolingRate;
+	private double gunCoolingRate;
 	
-	public FiringController(double gunCoolingRate) {	    
+	public FiringController() {	    
 		targeted = false;
 		aimed = false;
-		
-		this.gunCoolingRate = gunCoolingRate;
 	}
 	
     public boolean readyToTarget(double gunHeat) {
@@ -67,7 +65,9 @@ public class FiringController {
 		
 		return target.requiredPower;  
 	}
-	
 
+	public void setGunCoolingRate(double gunCoolingRate2) {
+		this.gunCoolingRate = gunCoolingRate;
+	}
 	
 }
