@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.util.LinkedList;
+import java.util.Random;
 
 import net.adbenson.robocode.botstate.BattleState;
 import net.adbenson.robocode.botstate.OpponentState;
@@ -54,6 +55,10 @@ public class Rainbot extends AdvancedRobot {
 	
 	private FiringController firingController;
 	
+	private Random rand;
+	
+	private boolean cornered;
+	
 	public Rainbot() {
 		super();
 		
@@ -68,6 +73,10 @@ public class Rainbot extends AdvancedRobot {
 		foundOpponents = new LinkedList<ScannedRobotEvent>();
 		
 		firingController = new FiringController();
+		
+		rand = new Random(System.currentTimeMillis());
+		
+		cornered = false;
 	}
 	
 	public void run() {
@@ -98,7 +107,9 @@ public class Rainbot extends AdvancedRobot {
 	    	color.hueShift(this);
 	    	
 	    	//Square off!
-	    	faceOpponent();
+	    	if (! cornered) {
+	    		faceOpponent();
+	    	}
 	    	
 	    	OpponentBullet bullet = detectOpponentFire();
 	    	if (bullet != null) {
@@ -234,10 +245,11 @@ public class Rainbot extends AdvancedRobot {
 	
 	private void dodge(OpponentBullet bullet) {
 		double move = bullet.getEscapeDistance() + stoppingTurns();
-//		preferredDirection = -preferredDirection;
+		preferredDirection = (rand.nextInt(2) == 0)? -1 : 1;
 		
 		destination = getDestination(preferredDirection, move);
-			
+		cornered = false;
+	
 		//See if our trajectory would take us outside the safety
 		if (!preferredArea.contains(destination.toPoint())) {
 			destination = getDestination(-preferredDirection, move);
@@ -245,13 +257,19 @@ public class Rainbot extends AdvancedRobot {
 			System.out.println("Forward not safe. Reversing");
 			if (!preferredArea.contains(destination.toPoint())) {
 				System.out.println("Backed into a corner!");
+				cornered = true;
 				
 				double heading = getHeadingRadians();
 				
+				//Try different directions, scaling back the distance to be moved
+				move *= 0.5;
 				do {
 					heading += 0.1;
 					destination = getDestination(heading, preferredDirection, move);
+				//Until a safe escape route is found
 				} while(!preferredArea.contains(destination.toPoint()));
+				
+				heading += 0.2;
 				
 				setTurnHeading(heading);
 			}
