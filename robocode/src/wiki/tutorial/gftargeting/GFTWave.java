@@ -2,41 +2,36 @@ package wiki.tutorial.gftargeting;
 
 import java.awt.geom.Point2D;
 
-import robocode.AdvancedRobot;
 import robocode.Condition;
 import robocode.util.Utils;
 
 class GFTWave extends Condition {
 	static Point2D targetLocation;
 
-	double bulletPower;
-	Point2D gunLocation;
-	double bearing;
-	double lateralDirection;
-
 	private static final double MAX_DISTANCE = 900;
 	private static final int DISTANCE_INDEXES = 5;
 	private static final int VELOCITY_INDEXES = 5;
 	private static final int BINS = 25;
-	private static final int MIDDLE_BIN = (BINS - 1) / 2;
+	private static final int LAST_BIN = BINS - 1;
+	private static final int MIDDLE_BIN = LAST_BIN / 2;
 	private static final double MAX_ESCAPE_ANGLE = 0.7;
 	private static final double BIN_WIDTH = MAX_ESCAPE_ANGLE / (double)MIDDLE_BIN;
+	
+	double bulletPower;
+	Point2D gunLocation;
+	double bearing;
+	double lateralDirection;
 	
 	private static int[][][][] statBuffers = new int[DISTANCE_INDEXES][VELOCITY_INDEXES][VELOCITY_INDEXES][BINS];
 
 	private int[] buffer;
-	private AdvancedRobot robot;
 	private double distanceTraveled;
-	
-	GFTWave(AdvancedRobot _robot) {
-		this.robot = _robot;
-	}
 	
 	public boolean test() {
 		advance();
 		if (hasArrived()) {
 			buffer[currentBin()]++;
-			robot.removeCustomEvent(this);
+//			robot.removeCustomEvent(this);
 		}
 		return false;
 	}
@@ -61,9 +56,12 @@ class GFTWave extends Condition {
 	}
 	
 	private int currentBin() {
-		int bin = (int)Math.round(((Utils.normalRelativeAngle(GFTUtils.absoluteBearing(gunLocation, targetLocation) - bearing)) /
-				(lateralDirection * BIN_WIDTH)) + MIDDLE_BIN);
-		return GFTUtils.minMax(bin, 0, BINS - 1);
+		double absBearing = GFTUtils.absoluteBearing(gunLocation, targetLocation);
+		double normalBearing = Utils.normalRelativeAngle(absBearing - bearing);
+		double binOffset = normalBearing / (lateralDirection * BIN_WIDTH);
+		
+		int bin = (int)Math.round(binOffset + MIDDLE_BIN);
+		return GFTUtils.minMax(bin, 0, LAST_BIN);
 	}
 	
 	private int mostVisitedBin() {
