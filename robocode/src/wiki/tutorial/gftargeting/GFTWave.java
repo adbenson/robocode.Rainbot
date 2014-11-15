@@ -1,12 +1,17 @@
 package wiki.tutorial.gftargeting;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
+import java.util.Random;
 
 import robocode.AdvancedRobot;
 import robocode.Condition;
 import robocode.util.Utils;
 
 class GFTWave extends Condition {
+	static Random rand = new Random();
+	
 	static Point2D targetLocation;
 
 	double bulletPower;
@@ -28,8 +33,12 @@ class GFTWave extends Condition {
 	private AdvancedRobot robot;
 	private double distanceTraveled;
 	
+	private Color color;
+	
 	GFTWave(AdvancedRobot _robot) {
 		this.robot = _robot;
+		
+		color = Color.getHSBColor(rand.nextFloat(), 1, 1);
 	}
 	
 	public boolean test() {
@@ -74,5 +83,11 @@ class GFTWave extends Condition {
 			}
 		}
 		return mostVisited;
-	}	
+	}
+
+	public void onPaint(Graphics2D g) {
+		g.setColor(color);
+		
+		g.drawOval((int)gunLocation.getX(), (int)gunLocation.getY(), (int)distanceTraveled, (int)distanceTraveled);
+	}
 }
