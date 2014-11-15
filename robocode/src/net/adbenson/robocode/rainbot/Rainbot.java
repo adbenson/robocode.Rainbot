@@ -7,6 +7,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.util.LinkedList;
 import java.util.Random;
 
+import net.adbenson.robocode.TurnBot;
 import net.adbenson.robocode.botstate.BattleState;
 import net.adbenson.robocode.botstate.OpponentState;
 import net.adbenson.robocode.bullet.Bullet;
@@ -16,7 +17,6 @@ import net.adbenson.robocode.targeting.FiringController;
 import net.adbenson.robocode.targeting.PredictiveTargeting;
 import net.adbenson.utility.Utility;
 import net.adbenson.utility.Vector;
-import robocode.AdvancedRobot;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletHitEvent;
 import robocode.BulletMissedEvent;
@@ -28,7 +28,7 @@ import robocode.Rules;
 import robocode.ScannedRobotEvent;
 import robocode.util.Utils;
 
-public class Rainbot extends AdvancedRobot {
+public class Rainbot extends TurnBot {
 	
 	public static final double TURN_FACTOR = 5.0;
 	
@@ -79,7 +79,7 @@ public class Rainbot extends AdvancedRobot {
 		cornered = false;
 	}
 	
-	public void run() {
+	public void init() {
 		generateBoundries();
 		gunCoolingRate = this.getGunCoolingRate();
 		
@@ -90,52 +90,50 @@ public class Rainbot extends AdvancedRobot {
 		setAdjustRadarForRobotTurn(true);
 	    
 	    startRadarLock();
-	    
-	    do {
-	    	//Store the current state of this bot and any others scanned
-	    	state.addBots(this, foundOpponents);
-	    	
-	    	if (foundOpponents.isEmpty()) {
-	    		//Uh-oh... we've lost track of our opponent
-	    		System.out.print("Opponent Lost: ");
-	    		startRadarLock();
-	    	}
-	    	
-	    	//Reset the list of scanned robots
-	    	foundOpponents = new LinkedList<ScannedRobotEvent>();
+	}
+	
+	public void turn() {
+    	//Store the current state of this bot and any others scanned
+    	state.addBots(this, foundOpponents);
+    	
+    	if (foundOpponents.isEmpty()) {
+    		//Uh-oh... we've lost track of our opponent
+    		System.out.print("Opponent Lost: ");
+    		startRadarLock();
+    	}
+    	
+    	//Reset the list of scanned robots
+    	foundOpponents = new LinkedList<ScannedRobotEvent>();
 
-	    	color.hueShift(this);
-	    	
-	    	//Square off!
-	    	if (! cornered) {
-	    		faceOpponent();
-	    	}
-	    	
-	    	OpponentBullet bullet = detectOpponentFire();
-	    	if (bullet != null) {
-	    		dodge(bullet);
-	    	}
-	    	
-	    	updateBulletStates();
-	    	
-	    	if (firingController.readyToTarget(getGunHeat()) && predictor.canPredict(getTime())) {
-	    		OpponentState target = firingController.target(predictor, getPosition());
-	    		if (target != null) {
-	    			setGunTurnToTarget(target);
-	    		}
-	    	}
-	    	
-	    	if (firingController.targetAquired()) {
-	    		firingController.checkAim(getGunTurnRemainingRadians());	    		
-	    	}
-	    	
-	    	if (firingController.readyToFire(getGunHeat()) && state.getTarget().isAlive()) {
-	    		setFire(firingController.fire());
-	    	}	    	
+    	color.hueShift(this);
+    	
+    	//Square off!
+    	if (! cornered) {
+    		faceOpponent();
+    	}
+    	
+    	OpponentBullet bullet = detectOpponentFire();
+    	if (bullet != null) {
+    		dodge(bullet);
+    	}
+    	
+    	updateBulletStates();
+    	
+    	if (firingController.readyToTarget(getGunHeat()) && predictor.canPredict(getTime())) {
+    		OpponentState target = firingController.target(predictor, getPosition());
+    		if (target != null) {
+    			setGunTurnToTarget(target);
+    		}
+    	}
+    	
+    	if (firingController.targetAquired()) {
+    		firingController.checkAim(getGunTurnRemainingRadians());	    		
+    	}
+    	
+    	if (firingController.readyToFire(getGunHeat()) && state.getTarget().isAlive()) {
+    		setFire(firingController.fire());
+    	}	    	
 
-	    	execute();
-
-	    } while (true);
 	}
 	
 	private void updateBulletStates() {
