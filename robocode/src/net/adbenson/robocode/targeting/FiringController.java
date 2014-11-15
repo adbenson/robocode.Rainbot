@@ -66,7 +66,7 @@ public class FiringController {
 		return target.requiredPower;  
 	}
 
-	public void setGunCoolingRate(double gunCoolingRate2) {
+	public void setGunCoolingRate(double gunCoolingRate) {
 		this.gunCoolingRate = gunCoolingRate;
 	}
 	
