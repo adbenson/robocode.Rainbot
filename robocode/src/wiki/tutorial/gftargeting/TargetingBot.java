@@ -8,10 +8,15 @@ import robocode.Bullet;
 import robocode.ScannedRobotEvent;
 import robocode.util.Utils;
 
-// This code is released under the RoboWiki Public Code Licence (RWPCL), datailed on:
-// http://robowiki.net/?RWPCL
-//
-// GFTargetingBot, by PEZ. A simple GuessFactorTargeting bot for tutorial purposes.
+/**
+ * TargetingBot
+ * @author welah
+ *
+ * Based on GFTargetingBot, by PEZ. A simple GuessFactorTargeting bot for tutorial purposes.
+ *
+ * This code is released under the RoboWiki Public Code Licence (RWPCL), datailed on:
+ * http://robowiki.net/?RWPCL
+ */
 
 public class TargetingBot extends TurnBot {
 	private static final double BULLET_POWER = 1.9;
