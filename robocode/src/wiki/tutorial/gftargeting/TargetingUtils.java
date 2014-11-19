@@ -2,8 +2,8 @@ package wiki.tutorial.gftargeting;
 
 import java.awt.geom.Point2D;
 
-class GFTUtils {
-	static double bulletVelocity(double power) {
+public class TargetingUtils {
+	static double bulletTravelPerTick(double power) {
 		return 20 - 3 * power;
 	}
 	
@@ -14,10 +14,6 @@ class GFTUtils {
 	
 	static double absoluteBearing(Point2D source, Point2D target) {
 		return Math.atan2(target.getX() - source.getX(), target.getY() - source.getY());
-	}
-
-	static int sign(double v) {
-		return v < 0 ? -1 : 1;
 	}
 	
 	static int minMax(int v, int min, int max) {
